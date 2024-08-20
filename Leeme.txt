@@ -1,0 +1,2 @@
+ejecutar "composer update"
+cada vez que alteres rutas o cuando instales 

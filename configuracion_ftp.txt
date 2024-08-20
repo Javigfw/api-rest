@@ -1,0 +1,26 @@
+[
+    {
+        "name": "Servidor de desarrollo",
+        "protocol": "ftp",
+        "host": "testhorario.intersoftalmeria.es",
+        "port": 21,
+        "username": "desarrolloweb@testhorario.intersoftalmeria.es",
+        "password": "j97J0wLvkY9t3CNd",
+        "remotePath": "/restapi-dispositivo-v2",
+        "context": "./",
+        "secure": false,
+        "watcher": {
+            "files": "**",
+            "autoUpload": true,
+            "autoDelete": true
+        },
+        "ignore": [
+            ".vscode",
+            "composer.json",
+            "composer.lock",
+            "node_modules",
+            "Leeme.txt",
+            "configuracion_ftp.txt"
+        ]
+    }
+]

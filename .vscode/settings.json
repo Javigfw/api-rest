@@ -1,0 +1,38 @@
+{
+  "workbench.colorCustomizations": {
+    "activityBar.activeBackground": "#1f6fd0",
+    "activityBar.background": "#1f6fd0",
+    "activityBar.foreground": "#e7e7e7",
+    "activityBar.inactiveForeground": "#e7e7e799",
+    "activityBarBadge.background": "#ee90bb",
+    "activityBarBadge.foreground": "#15202b",
+    "commandCenter.border": "#e7e7e799",
+    "sash.hoverBorder": "#1f6fd0",
+    "statusBar.background": "#1857a4",
+    "statusBar.foreground": "#e7e7e7",
+    "statusBarItem.hoverBackground": "#1f6fd0",
+    "statusBarItem.remoteBackground": "#1857a4",
+    "statusBarItem.remoteForeground": "#e7e7e7",
+    "titleBar.activeBackground": "#1857a4",
+    "titleBar.activeForeground": "#e7e7e7",
+    "titleBar.inactiveBackground": "#1857a499",
+    "titleBar.inactiveForeground": "#e7e7e799"
+  },
+
+  // Configuramos peacock
+  "peacock.color": "#1857a4",
+
+  // Configuramos todo-tree
+  "todo-tree.highlights.customHighlight": {
+    "NOTA": {
+      "icon": "note",
+      "type": "tag",
+      "background": "#f1c40f",
+      "foreground": "#000000",
+      "iconColour": "#f1c40f",
+      "gutterIcon": true
+    }
+  },
+  "todo-tree.general.tags": ["NOTA"],
+  "todo-tree.general.statusBar": "tags"
+}

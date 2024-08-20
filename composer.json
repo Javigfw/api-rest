@@ -1,0 +1,23 @@
+{
+  "require": {
+    "slim/slim": "4.11",
+    "nyholm/psr7": "1.5",
+    "nyholm/psr7-server": "1.0.2",
+    "php-di/php-di": "6.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "src/",
+      "App\\Login\\": "src/Modules/Login/",
+      "App\\Articulos\\": "src/Modules/Articulos/",
+      "App\\Familias\\": "src/Modules/Familias/",
+      "App\\Subfamilias\\": "src/Modules/Subfamilias/",
+      "App\\Pantallas\\": "src/Modules/Pantallas/",
+      "App\\Marcas\\": "src/Modules/Marcas/",
+      "App\\Iva\\": "src/Modules/Iva/",
+      "App\\Middleware\\": "src/Modules/Middleware/",
+      "App\\Configuracion\\": "src/Modules/Configuracion/",
+      "App\\Local\\": "src/Modules/Local/"
+    }
+  }
+}
