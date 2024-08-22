@@ -20,3 +20,11 @@ define('DB_PASS', 'yIyjzBuPLj21908J'); // CAMBIAR
 define('MIDDLEWARE_DISPLAY_ERROR_DETAILS', true);
 define('MIDDLEWARE_LOG_ERROR', true);
 define('MIDDLEWARE_LOG_ERROR_DETAILS', true);
+
+
+//*************************************************************************
+//* IMAGENES
+//*************************************************************************
+
+define('IMAGE_SIZE_SMALL', 127);
+define('IMAGE_SIZE_BIG', 800);

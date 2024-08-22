@@ -19,67 +19,83 @@ return function (App $app) {
     //*************************************************************************
     $app->post('/login', \App\Login\LoginController::class . ':login');
 
-    //*************************************************************************
-    //* RUTA ARTICULOS
-    //*************************************************************************
-
-    $app->get('/listarArticulos', \App\Articulos\ArticulosController::class . ':listarArticulos');
-    $app->post('/insertarArticulo', \App\Articulos\ArticulosController::class . ':insertarArticulo');
-    $app->post('/insertarArticuloPlantilla', \App\Articulos\ArticulosController::class . ':insertarArticuloPlantilla');
-    $app->post('/actualizarArticuloPlantilla', \App\Articulos\ArticulosController::class . ':actualizarArticuloPlantilla');
-    $app->delete('/deleteArticulo/{codigo}', \App\Articulos\ArticulosController::class . ':deleteArticulo');
-    $app->get('/obtenerImagenArticuloPlantilla/{codigo:[0-9]+}[/{tipo:[0-9]+}]', \App\Articulos\ArticulosController::class . ':obtenerImagenArticuloPlantilla');
 
     //*************************************************************************
-    //* RUTA FAMILIAS
+    //* CONFIGURACION INICIAL    TPV -> PHPMYADMIN
     //*************************************************************************
-    $app->get('/listarFamilias', \App\Familias\FamiliasController::class . ':listarFamilias');
-    $app->get('/listarFamiliasSubfamilia', \App\Familias\FamiliasController::class . ':listarFamiliasSubfamilia');
-    $app->post('/insertarFamilia', \App\Familias\FamiliasController::class . ':insertarFamilia');
-    $app->post('/insertarFamiliaPlaning', \App\Familias\FamiliasController::class . ':insertarFamiliaPlaning');
-    $app->post('/updateFamilia', \App\Familias\FamiliasController::class . ':updateFamilia');
-    $app->delete('/deleteFamilia/{codigo}', \App\Familias\FamiliasController::class . ':deleteFamilia');
-
-    //*************************************************************************
-    //* RUTA SUBFAMILIAS
-    //*************************************************************************
-    $app->get('/listarSubfamilias', \App\Subfamilias\SubfamiliasController::class . ':listarSubfamilias');
-    $app->get('/listarSubfamiliasCodigo/{codigo}', \App\Subfamilias\SubfamiliasController::class . ':listarSubfamiliasCodigo');
-    $app->post('/insertarSubfamilia', \App\Subfamilias\SubfamiliasController::class . ':insertarSubfamilia');
-    $app->post('/insertarSubfamiliaPlaning', \App\Subfamilias\SubfamiliasController::class . ':insertarSubfamiliaPlaning');
-    $app->post('/updateSubfamilia', \App\Subfamilias\SubfamiliasController::class . ':updateSubfamilia');
-    $app->delete('/deleteSubfamilia/{codigo}', \App\Subfamilias\SubfamiliasController::class . ':deleteSubfamilia');
-
-    //*************************************************************************
-    //* RUTA PANTALLAS
-    //*************************************************************************
-    $app->get('/listarPantallas', \App\Pantallas\PantallasController::class . ':listarPantallas');
-    $app->post('/insertarPantallas', \App\Pantallas\PantallasController::class . ':insertarPantallas');
-    $app->post('/updatePantalla', \App\Pantallas\PantallasController::class . ':updatePantalla');
-    $app->delete('/borrarPantalla/{codigo}', \App\Pantallas\PantallasController::class . ':borrarPantalla');
+    $app->group('/cargaInicial', function (RouteCollectorProxy $group) use ($app) {
+        $group->post('/insertarFamilia', \App\Familias\FamiliasController::class . ':insertarFamilia');
+        $group->post('/insertarSubfamilia', \App\Subfamilias\SubfamiliasController::class . ':insertarSubfamilia');
+        $group->post('/insertarPantallas', \App\Pantallas\PantallasController::class . ':insertarPantallas');
+        $group->post('/insertarMarca', \App\Marcas\MarcasController::class . ':insertarMarca');
+        $group->post('/insertarIva', \App\Iva\IvaController::class . ':insertarIva');
+        $group->post('/insertarArticulo', \App\Articulos\ArticulosController::class . ':insertarArticulo');
+    });
 
 
     //*************************************************************************
-    //* RUTA MARCAS
+    //* LISTAR DATOS PLANTILLA
     //*************************************************************************
-    $app->get('/listarMarcas', \App\Marcas\MarcasController::class . ':listarMarcas');
-    $app->post('/insertarMarca', \App\Marcas\MarcasController::class . ':insertarMarca');
-    $app->post('/updateMarca', \App\Marcas\MarcasController::class . ':updateMarca');
-    $app->delete('/borrarMarca/{codigo}', \App\Marcas\MarcasController::class . ':borrarMarca');
+
+    $app->group('/listarPlantilla', function (RouteCollectorProxy $group) use ($app) {
+        $group->get('/listarArticulos', \App\Articulos\ArticulosController::class . ':listarArticulos');
+        $group->get('/listarFamilias', \App\Familias\FamiliasController::class . ':listarFamilias');
+        $group->get('/listarFamiliasSubfamilia', \App\Familias\FamiliasController::class . ':listarFamiliasSubfamilia');
+        $group->get('/listarSubfamilias', \App\Subfamilias\SubfamiliasController::class . ':listarSubfamilias');
+        $group->get('/listarSubfamiliasCodigo/{codigo}', \App\Subfamilias\SubfamiliasController::class . ':listarSubfamiliasCodigo');
+        $group->get('/listarPantallas', \App\Pantallas\PantallasController::class . ':listarPantallas');
+        $group->get('/listarMarcas', \App\Marcas\MarcasController::class . ':listarMarcas');
+        $group->get('/listarIvas', \App\Iva\IvaController::class . ':listarIvas');
+        $group->get('/obtenerImagenArticuloPlantilla/{codigo:[0-9]+}[/{tipo:[0-9]+}]', \App\Articulos\ArticulosController::class . ':obtenerImagenArticuloPlantilla');
+    });
+
 
     //*************************************************************************
-    //* RUTA IVAS
+    //* INSERTAR DATOS PLANTILLA
     //*************************************************************************
-    $app->get('/listarIvas', \App\Iva\IvaController::class . ':listarIvas');
-    $app->post('/insertarIva', \App\Iva\IvaController::class . ':insertarIva');
-    $app->post('/updateIva', \App\Iva\IvaController::class . ':updateIva');
-    $app->delete('/borrarIva/{codigo}', \App\Iva\IvaController::class . ':borrarIva');
+    $app->group('/insertarPlantilla', function (RouteCollectorProxy $group) use ($app) {
+        $group->post('/insertarArticuloPlantilla', \App\Articulos\ArticulosController::class . ':insertarArticuloPlantilla');
+        $group->post('/insertarFamiliaPlaning', \App\Familias\FamiliasController::class . ':insertarFamiliaPlaning');
+        $group->post('/insertarSubfamiliaPlaning', \App\Subfamilias\SubfamiliasController::class . ':insertarSubfamiliaPlaning');
+        $group->post('/insertarPantallas', \App\Pantallas\PantallasController::class . ':insertarPantallas');
+        $group->post('/insertarMarca', \App\Marcas\MarcasController::class . ':insertarMarca');
+        $group->post('/insertarIva', \App\Iva\IvaController::class . ':insertarIva');
+    });
+
+
+    //*************************************************************************
+    //* ACTUALIZAR DATOS PLANTILLA
+    //*************************************************************************
+    $app->group('/updatePlantilla', function (RouteCollectorProxy $group) use ($app) {
+        $group->post('/actualizarArticuloPlantilla', \App\Articulos\ArticulosController::class . ':actualizarArticuloPlantilla');
+        $group->post('/updateFamilia', \App\Familias\FamiliasController::class . ':updateFamilia');
+        $group->post('/updateSubfamilia', \App\Subfamilias\SubfamiliasController::class . ':updateSubfamilia');
+        $group->post('/updatePantalla', \App\Pantallas\PantallasController::class . ':updatePantalla');
+        $group->post('/updateMarca', \App\Marcas\MarcasController::class . ':updateMarca');
+        $group->post('/updateIva', \App\Iva\IvaController::class . ':updateIva');
+    });
+
+
+    //*************************************************************************
+    //* BORRAR DATOS PLANTILLA
+    //*************************************************************************
+    $app->group('/deletePlantilla', function (RouteCollectorProxy $group) use ($app) {
+        $group->delete('/deleteArticulo/{codigo}', \App\Articulos\ArticulosController::class . ':deleteArticulo');
+        $group->delete('/deleteFamilia/{codigo}', \App\Familias\FamiliasController::class . ':deleteFamilia');
+        $group->delete('/deleteSubfamilia/{codigo}', \App\Subfamilias\SubfamiliasController::class . ':deleteSubfamilia');
+        $group->delete('/borrarPantalla/{codigo}', \App\Pantallas\PantallasController::class . ':borrarPantalla');
+        $group->delete('/borrarMarca/{codigo}', \App\Marcas\MarcasController::class . ':borrarMarca');
+        $group->delete('/borrarIva/{codigo}', \App\Iva\IvaController::class . ':borrarIva');
+    });
+
 
     //*************************************************************************
     //* RUTA LOCALES
     //*************************************************************************
-    $app->get('/listarLocalesAdmin', \App\Local\LocalController::class . ':listarLocalesAdmin');
-    $app->get('/listarLocalesUsuario/{usuario}', \App\Local\LocalController::class . ':listarLocalesUsuario');
+    $app->group('/locales', function (RouteCollectorProxy $group) use ($app) {
+        $group->get('/listarLocalesAdmin', \App\Local\LocalController::class . ':listarLocalesAdmin');
+        $group->get('/listarLocalesUsuario/{usuario}', \App\Local\LocalController::class . ':listarLocalesUsuario');
+    });
 
     //*************************************************************************
     //* RUTAS GRUPO ADMINISTRADORES

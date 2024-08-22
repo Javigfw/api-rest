@@ -422,25 +422,285 @@ class Utils
         return $respuesta;
     }
 
+
+    /**
+     * obtenerImagenArticulo
+     *
+     * @param  mixed $id
+     * @param  mixed $tipo
+     * @return mixed
+     */
     public static function obtenerImagenArticulo(int $id, int $tipo = 0): mixed
     {
+        // Definir las rutas para las imágenes pequeña y grande
         $rutaP = $_SERVER['DOCUMENT_ROOT'] . API_BASE_PATH . '/imagenes/articulo/p/' . $id . '.jpg';
         $rutaG = $_SERVER['DOCUMENT_ROOT'] . API_BASE_PATH . '/imagenes/articulo/g/' . $id . '.jpg';
+
+        // Inicializar las variables de contenido
         $contenidoP = '';
         $contenidoG = '';
+
+        // Verificar si se debe incluir la imagen pequeña y si existe
         if (($tipo == 0 || $tipo == 1) && file_exists($rutaP)) {
             $contenidoP = base64_encode(file_get_contents($rutaP));
-        } else if (($tipo == 0 || $tipo == 2) && file_exists($rutaG)) {
+        }
+
+        // Verificar si se debe incluir la imagen grande y si existe
+        if (($tipo == 0 || $tipo == 2) && file_exists($rutaG)) {
             $contenidoG = base64_encode(file_get_contents($rutaG));
         }
 
+        // Retornar la imagen o las imágenes según el tipo
         if ($tipo == 0) {
-            return ['p' => $contenidoP, 'g' => $contenidoG];
-        } else if ($tipo == 1) {
+            return [
+                'p' => $contenidoP,
+                'g' => $contenidoG
+            ];
+        } elseif ($tipo == 1) {
             return $contenidoP;
-        } else if ($tipo == 2) {
+        } elseif ($tipo == 2) {
             return $contenidoG;
+        } else {
+            return '';
         }
-        return '';
     }
+
+
+
+    /**
+     * convertToJpeg
+     *
+     * @param  mixed $base64Image
+     * @return void
+     */
+    public static function convertToJpeg($base64Image)
+    {
+        // Decodificar Base64 y obtener los datos binarios de la imagen
+        $imageData = base64_decode(explode(',', $base64Image)[1]);
+
+        if ($imageData === false) {
+            throw new Exception('Error al decodificar la imagen Base64.');
+        }
+        // Crear una imagen desde los datos binarios
+        $image = imagecreatefromstring($imageData);
+
+        if ($image === false) {
+            throw new Exception('No se pudo crear la imagen desde los datos proporcionados.');
+        }
+
+        // Obtener la información de la imagen para determinar su tipo
+        $imageInfo = getimagesizefromstring($imageData);
+        $mimeType = $imageInfo['mime'];
+
+        // Capturar la salida en un buffer
+        ob_start();
+        if ($mimeType === 'image/jpeg') {
+            // Si ya es JPEG, simplemente devolver los datos tal cual
+            imagejpeg($image);
+        } else {
+            // Convertir la imagen a JPEG
+            imagejpeg($image);
+        }
+        $jpegData = ob_get_clean();
+        imagedestroy($image);
+
+        return $jpegData;
+    }
+
+    /**
+     * resizeImageBase64
+     *
+     * @param  mixed $base64String
+     * @param  mixed $desiredWidth
+     * @return void
+     */
+    /**
+     * Redimensiona una imagen binaria y devuelve la imagen redimensionada en formato binario.
+     *
+     * @param string $imageData Los datos binarios de la imagen.
+     * @param int $desiredWidth El ancho deseado para la imagen redimensionada.
+     * @return string Los datos binarios de la imagen redimensionada en formato JPEG.
+     * @throws Exception Si ocurre algún error durante el procesamiento.
+     */
+    public static function resizeImageBinary($imageData, $desiredWidth)
+    {
+        // Crear una imagen desde los datos binarios
+        $sourceImage = imagecreatefromstring($imageData);
+
+        if ($sourceImage === false) {
+            throw new Exception('No se pudo crear la imagen desde los datos proporcionados.');
+        }
+        // Obtener las dimensiones originales de la imagen
+        $originalWidth = imagesx($sourceImage);
+        $originalHeight = imagesy($sourceImage);
+
+        // Si la anchura original es menor o igual a la anchura deseada, no redimensionar
+        if ($originalWidth <= $desiredWidth) {
+            imagedestroy($sourceImage);
+            return $imageData;
+        }
+
+        // Calcular la nueva altura manteniendo la relación de aspecto
+        $ratio = $originalHeight / $originalWidth;
+        $newHeight = $desiredWidth * $ratio;
+
+        // Crear una nueva imagen con las dimensiones redimensionadas
+        $newImage = imagecreatetruecolor($desiredWidth, $newHeight);
+
+        // Configurar el color de fondo a blanco para evitar imágenes con fondo transparente
+        $white = imagecolorallocate($newImage, 255, 255, 255);
+        imagefill($newImage, 0, 0, $white);
+
+        // Copiar y redimensionar la imagen original en la nueva imagen
+        imagecopyresampled($newImage, $sourceImage, 0, 0, 0, 0, $desiredWidth, $newHeight, $originalWidth, $originalHeight);
+
+        // Capturar la imagen redimensionada en un buffer
+        ob_start();
+        imagejpeg($newImage, null, 90);
+        $resizedImageData = ob_get_contents();
+        ob_end_clean();
+
+        // Liberar memoria
+        imagedestroy($sourceImage);
+        imagedestroy($newImage);
+
+        return $resizedImageData;
+    }
+
+
+    /**
+     * Guarda una imagen binaria en una ruta específica del servidor.
+     *
+     * @param string $imageData Los datos binarios de la imagen.
+     * @param string $filePath La ruta completa en el servidor donde se debe guardar la imagen.
+     * @return bool Retorna true si la imagen se guardó correctamente, false en caso contrario.
+     * @throws Exception Si ocurre algún error durante el proceso.
+     */
+    public static function saveBinaryImageToFile($imageData, $filePath, $fileName)
+    {
+        // Verifica que los datos de la imagen no estén vacíos
+        if (empty($imageData)) {
+            throw new Exception('Los datos de la imagen están vacíos.');
+        }
+
+        // Verifica que el directorio de destino exista y tenga permisos de escritura
+        $directory = dirname($filePath);
+        if (!is_dir($directory)) {
+            throw new Exception('El directorio de destino no existe.');
+        }
+
+        if (!is_writable($directory)) {
+            throw new Exception('El directorio de destino no tiene permisos de escritura.');
+        }
+
+        // Intenta guardar la imagen en la ruta especificada
+        if (file_put_contents($filePath . $fileName, $imageData) === false) {
+            throw new Exception('Error al guardar la imagen en el archivo.');
+        }
+
+        return true;
+    }
+
+    /**
+     * Procesa y guarda una imagen en el servidor.
+     *
+     * @param array $params Array con parámetros necesarios:
+     *                      - 'imagenP': Imagen en base64
+     *                      - 'mimeP': Tipo MIME de la imagen
+     * @param string $basePath Ruta base para guardar la imagen
+     * @param int $imageSize Tamaño deseado para redimensionar la imagen
+     * @return bool Retorna true si la imagen se guardó correctamente, false en caso contrario
+     * @throws Exception Si ocurre un error durante el proceso
+     */
+    public static function processAndSaveImages($params, $basePath, $smallImageSize, $largeImageSize, $updateMode = false, $existingImageName = '')
+    {
+        // Preparar datos de imagen
+        $base64ImageP = $params['imagenP'];
+        $base64ImageG = $params['imagenG'];
+        $mimeP = $params['mimeP'];
+        $mimeG = $params['mimeG'];
+        $rutaCarpetaP = $_SERVER['DOCUMENT_ROOT'] . $basePath . '/imagenes/articulo/p/';
+        $rutaCarpetaG = $_SERVER['DOCUMENT_ROOT'] . $basePath . '/imagenes/articulo/g/';
+        $rutaImagenP = 'data:' . $mimeP . ';base64,' . $base64ImageP;
+        $rutaImagenG = 'data:' . $mimeG . ';base64,' . $base64ImageG;
+
+        // Crear el directorio de destino si no existe
+        if (!is_dir($rutaCarpetaP)) {
+            mkdir($rutaCarpetaP, 0755, true);
+        }
+        if (!is_dir($rutaCarpetaG)) {
+            mkdir($rutaCarpetaG, 0755, true);
+        }
+
+        // Determinar el nombre del archivo
+        $fileName = $updateMode ? $existingImageName : self::obtenerUltimoAutoIncrement();
+        $fileName .= '.jpg';
+
+        // Procesar imagen pequeña
+        try {
+            $jpegBase64P = self::convertToJpeg($rutaImagenP);
+            $imagenPequena = self::resizeImageBinary($jpegBase64P, $smallImageSize);
+            self::saveBinaryImageToFile($imagenPequena, $rutaCarpetaP, $fileName);
+        } catch (Exception $e) {
+            throw new Exception('Error al procesar la imagen pequeña: ' . $e->getMessage());
+        }
+
+        // Procesar imagen grande
+        try {
+            $jpegBase64G = self::convertToJpeg($rutaImagenG);
+            $imagenGrande = self::resizeImageBinary($jpegBase64G, $largeImageSize);
+            self::saveBinaryImageToFile($imagenGrande, $rutaCarpetaG, $fileName);
+        } catch (Exception $e) {
+            throw new Exception('Error al procesar la imagen grande: ' . $e->getMessage());
+        }
+
+        return true;
+    }
+
+
+    /**
+     * Elimina un archivo en dos directorios específicos del servidor.
+     *
+     * @param string $fileName El nombre del archivo que se debe eliminar.
+     * @param string $basePath La ruta base en el servidor.
+     * @return bool Retorna true si el archivo se eliminó correctamente de ambos directorios, false en caso contrario.
+     */
+    public static function borrarImagenServidor($fileName, $basePath)
+    {
+        // Construir las rutas completas a los directorios
+        $rutaCarpetaP = $_SERVER['DOCUMENT_ROOT'] . $basePath . '/imagenes/articulo/p/';
+        $rutaCarpetaG = $_SERVER['DOCUMENT_ROOT'] . $basePath . '/imagenes/articulo/g/';
+
+        // Inicializar un indicador para el éxito de la eliminación
+        $deletedFromBoth = true;
+
+        // Eliminar el archivo en el primer directorio
+        $filePathP = $rutaCarpetaP . $fileName . '.jpg';
+
+        if (file_exists($filePathP)) {
+            if (!unlink($filePathP)) {
+                $deletedFromBoth = false; // Marcar como fallido si no se pudo eliminar
+            }
+        }
+
+        // Eliminar el archivo en el segundo directorio
+        $filePathG = $rutaCarpetaG . $fileName . '.jpg';
+        if (file_exists($filePathG)) {
+            if (!unlink($filePathG)) {
+                $deletedFromBoth = false; // Marcar como fallido si no se pudo eliminar
+            }
+        }
+
+        // Verificar si el archivo fue eliminado en ambos directorios
+        if ($deletedFromBoth) {
+            return true;
+        } else {
+            throw new Exception('No se pudo eliminar el archivo en uno o ambos directorios.');
+        }
+    }
+
+
+
+
+    // fin clase
 }

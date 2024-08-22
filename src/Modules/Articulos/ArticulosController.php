@@ -8,6 +8,7 @@ use App\Helpers\Utils;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use PDO;
+use Exception;
 
 
 class ArticulosController extends Controller
@@ -23,6 +24,11 @@ class ArticulosController extends Controller
      */
     public function listarArticulos(Request $request, Response $response, array $args): Response
     {
+
+
+
+
+
         // generamos la consulta
         $sql = "SELECT a.codigo, f.nombre as familia, s.nombre as subfamilia, p.nombre as pantalla, m.nombre as marca,
          i.nombre as ivaCompra, iv.nombre as ivaVenta, a.descripcion,
@@ -121,12 +127,10 @@ class ArticulosController extends Controller
             // guardamos la imagen en el servidor
             $base64Image = $params['imagen'];
             $newName = $maxCodigo;
-            //$ruta = '/var/www/virtual/pedidoweb.info/htdocs/api_config/imagenes/peque/';
-            $ruta = $_SERVER['DOCUMENT_ROOT'] . API_BASE_PATH . '/imagenes/p';
+            $ruta = $_SERVER['DOCUMENT_ROOT'] . API_BASE_PATH . '/imagenes/articulo/p/';
 
             // guardamos la imagen
             $procesado = Utils::procesarImagen($base64Image, $newName, $ruta);
-
 
             return Utils::responseJsonOk($response, 'Articulo insertado. ' . $procesado['msg'], 200);
         } else {
@@ -155,8 +159,7 @@ class ArticulosController extends Controller
             'codigoBarras',
             'compra',
             'venta',
-            'precio',
-            'imagen'
+            'precio'
         ], $params);
 
         // si no tenemos parametros mostramos el mensaje
@@ -203,16 +206,10 @@ class ArticulosController extends Controller
         // si la respuesta es correcta
         if ($respuesta['status'] == 'ok') {
 
-            $maxCodigo = Utils::obtenerUltimoAutoIncrement();
             // guardamos la imagen en el servidor
-            $base64Image = $params['imagen'];
-            $newName = $maxCodigo;
-            $ruta = $_SERVER['DOCUMENT_ROOT'] . API_BASE_PATH . '/imagenes/p';
+            Utils::processAndSaveImages($params, API_BASE_PATH, IMAGE_SIZE_SMALL, IMAGE_SIZE_BIG);
 
-            // guardamos la imagen
-            $procesado = Utils::procesarImagen($base64Image, $newName, $ruta);
-
-            return Utils::responseJsonOk($response, 'Articulo insertado. ' . $procesado['msg'], 200);
+            return Utils::responseJsonOk($response, 'Articulo insertado. ' /*. $procesado['msg']*/, 200);
         } else {
             return Utils::responseJsonError($response, $respuesta['error']);
         }
@@ -262,14 +259,14 @@ class ArticulosController extends Controller
 
         // Generamos la consulta de actualización
         $sql = "UPDATE pl_articulo SET
-            familia = :familia,
-            descripcion = :descripcion,
-            codigoBarras = :codigoBarras,
-            compra = :compra,
-            venta = :venta,
-            ivaCompra = :ivaCompra,
-            ivaVenta = :ivaVenta,
-            precio = :precio";
+        familia = :familia,
+        descripcion = :descripcion,
+        codigoBarras = :codigoBarras,
+        compra = :compra,
+        venta = :venta,
+        ivaCompra = :ivaCompra,
+        ivaVenta = :ivaVenta,
+        precio = :precio";
 
         // Campos opcionales
         if (isset($params['idSubfamilia'])) {
@@ -300,11 +297,16 @@ class ArticulosController extends Controller
 
         // Si la respuesta es correcta
         if ($respuesta['status'] == 'ok') {
-            return Utils::responseJsonOk($response, 'Articulo actualizado', 200);
+            // Verificamos si existen imágenes antes de intentar guardarlas
+            if (!empty($params['imagenP']) || !empty($params['imagenG'])) {
+                Utils::processAndSaveImages($params, API_BASE_PATH, IMAGE_SIZE_SMALL, IMAGE_SIZE_BIG, true, $params['idArticulo']);
+            }
+            return Utils::responseJsonOk($response, 'Artículo actualizado', 200);
         } else {
             return Utils::responseJsonError($response, $respuesta['error']);
         }
     }
+
 
 
     /**
@@ -315,7 +317,7 @@ class ArticulosController extends Controller
      * @param  mixed $args
      * @return Response
      */
-    public function deleteArticulo(Request $request, Response $response, array $args): Response
+    public function deleteArticulo(Request $request, Response $response, array $args)
     {
         // obtenemos el codigo
         $codigo = $args['codigo'];
@@ -326,10 +328,13 @@ class ArticulosController extends Controller
             'codigo' => [$codigo, PDO::PARAM_INT]
         ]);
 
-        echo json_encode($respuesta);
-        exit();
-
         if ($respuesta['status'] == 'ok') {
+            try {
+                if (Utils::borrarImagenServidor($codigo, API_BASE_PATH)) {
+                }
+            } catch (Exception $e) {
+                echo 'Error: ' . $e->getMessage();
+            }
 
             return Utils::responseJsonOk($response, 'Articulo eliminado correctamente', 200);
         } else {
