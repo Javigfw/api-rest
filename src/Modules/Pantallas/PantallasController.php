@@ -20,7 +20,7 @@ class PantallasController extends Controller
      * @param  mixed $args
      * @return Response
      */
-    public function listarPantallas(Request $request, Response $response, array $args): Response
+    public function listar(Request $request, Response $response, array $args): Response
     {
         // generamos la consulta
         $sql = "SELECT codigo, nombre FROM pl_pantalla";
@@ -44,7 +44,7 @@ class PantallasController extends Controller
      * @param  mixed $args
      * @return Response
      */
-    public function insertarPantallas(Request $request, Response $response, array $args): Response
+    public function insertar(Request $request, Response $response, array $args): Response
     {
         $params = $request->getParsedBody();
         // parametros requeridos
@@ -79,12 +79,15 @@ class PantallasController extends Controller
      * @param  mixed $args
      * @return Response
      */
-    public function updatePantalla(Request $request, Response $response, array $args): Response
+    public function actualizar(Request $request, Response $response, array $args): Response
     {
+        // obtenemos el id
+        $id = $args['pantalla'];
+
         $params = $request->getParsedBody();
 
         // parametros requeridos
-        $mensaje = Utils::requiredParams(['nombre', 'codigo'], $params);
+        $mensaje = Utils::requiredParams(['nombre'], $params);
 
         // si no tenemos parametros mostramos el mensaje
         if ($mensaje != '') {
@@ -96,7 +99,7 @@ class PantallasController extends Controller
 
         $respuesta = Queries::actualizar($sql, [
             'nombre' => [$params['nombre'], PDO::PARAM_STR],
-            'codigo' => [$params['codigo'], PDO::PARAM_INT]
+            'codigo' => [$id, PDO::PARAM_INT]
         ]);
 
         if ($respuesta['status'] == 'ok') {
@@ -116,10 +119,10 @@ class PantallasController extends Controller
      * @param  mixed $args
      * @return Response
      */
-    public function borrarPantalla(Request $request, Response $response, array $args): Response
+    public function borrar(Request $request, Response $response, array $args): Response
     {
         // obtenemos el codigo
-        $codigo = $args['codigo'];
+        $codigo = $args['pantalla'];
 
         // generamos la consulta
         $sql = "DELETE FROM pl_pantalla WHERE codigo = :codigo";

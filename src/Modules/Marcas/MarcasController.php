@@ -21,7 +21,7 @@ class MarcasController extends Controller
      * @param  mixed $args
      * @return Response
      */
-    public function listarMarcas(Request $request, Response $response, array $args): Response
+    public function listar(Request $request, Response $response, array $args): Response
     {
         // generamos la consulta
         $sql = "SELECT codigo, nombre FROM pl_marca";
@@ -45,7 +45,7 @@ class MarcasController extends Controller
      * @param  mixed $args
      * @return Response
      */
-    public function insertarMarca(Request $request, Response $response, array $args): Response
+    public function insertar(Request $request, Response $response, array $args): Response
     {
         $params = $request->getParsedBody();
         // parametros requeridos
@@ -80,12 +80,15 @@ class MarcasController extends Controller
      * @param  mixed $args
      * @return Response
      */
-    public function updateMarca(Request $request, Response $response, array $args): Response
+    public function actualizar(Request $request, Response $response, array $args): Response
     {
+        // obtenemos el codigo
+        $id = $args['marca'];
+
         $params = $request->getParsedBody();
 
         // parametros requeridos
-        $mensaje = Utils::requiredParams(['nombre', 'codigo'], $params);
+        $mensaje = Utils::requiredParams(['nombre'], $params);
 
         // si no tenemos parametros mostramos el mensaje
         if ($mensaje != '') {
@@ -97,7 +100,7 @@ class MarcasController extends Controller
 
         $respuesta = Queries::actualizar($sql, [
             'nombre' => [$params['nombre'], PDO::PARAM_STR],
-            'codigo' => [$params['codigo'], PDO::PARAM_INT]
+            'codigo' => [$id, PDO::PARAM_INT]
         ]);
 
         if ($respuesta['status'] == 'ok') {
@@ -116,16 +119,16 @@ class MarcasController extends Controller
      * @param  mixed $args
      * @return Response
      */
-    public function borrarMarca(Request $request, Response $response, array $args): Response
+    public function borrar(Request $request, Response $response, array $args): Response
     {
         // obtenemos el codigo
-        $codigo = $args['codigo'];
+        $id = $args['marca'];
 
         // generamos la consulta
         $sql = "DELETE FROM pl_marca WHERE codigo = :codigo";
 
         $respuesta = Queries::borrar($sql, [
-            'codigo' => [$codigo, PDO::PARAM_INT]
+            'codigo' => [$id, PDO::PARAM_INT]
         ]);
 
         if ($respuesta['status'] == 'ok') {

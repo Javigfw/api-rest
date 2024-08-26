@@ -22,13 +22,8 @@ class ArticulosController extends Controller
      * @param  mixed $args
      * @return Response
      */
-    public function listarArticulos(Request $request, Response $response, array $args): Response
+    public function listar(Request $request, Response $response, array $args): Response
     {
-
-
-
-
-
         // generamos la consulta
         $sql = "SELECT a.codigo, f.nombre as familia, s.nombre as subfamilia, p.nombre as pantalla, m.nombre as marca,
          i.nombre as ivaCompra, iv.nombre as ivaVenta, a.descripcion,
@@ -54,91 +49,6 @@ class ArticulosController extends Controller
 
 
     /**
-     * insertarArticulos config inicial
-     *
-     * @param  mixed $request
-     * @param  mixed $response
-     * @param  mixed $args
-     * @return Response
-     */
-    public function insertarArticulo(Request $request, Response $response, array $args): Response
-    {
-        $params = $request->getParsedBody();
-
-        // parametros requeridos
-        $mensaje = Utils::requiredParams([
-            'nombreFamilia',
-            'nombreSubfamilia',
-            'nombreMarca',
-            'nombreIvaCompra',
-            'nombreIvaVenta',
-            'nombrePantalla',
-            'descripcion',
-            'codigoBarras',
-            'compra',
-            'venta',
-            'precio',
-            'imagen'
-        ], $params);
-
-        // si no tenemos parametros mostramos el mensaje
-        if ($mensaje != '') {
-            return Utils::responseJsonError($response, $mensaje);
-        }
-
-        // obtenemos el id de la familia
-        $idFamilia = Utils::obtenerIdFamiliaPorNombre($params['nombreFamilia']);
-
-        // obtenemos el id de la subfamilia
-        $idSubfamilia = Utils::obtenerIdSubfamiliaPorNombre($params['nombreSubfamilia']);
-
-        // obtenemos el id de la marca
-        $idMarca = Utils::obtenerIdMarcaPorNombre($params['nombreMarca']);
-
-        // obtenemos el iva de compra y venta
-        $idIvaCompra = Utils::obtenerIdIvaPorNombre($params['nombreIvaCompra']);
-        $idIvaVenta = Utils::obtenerIdIvaPorNombre($params['nombreIvaVenta']);
-
-        // obtenemos el nombre de pantalla
-        $idPantalla = Utils::obtenerIdPantallaPorNombre($params['nombrePantalla']);
-
-        // generamos la consulta
-        $sql = "INSERT INTO pl_articulo (familia, subfamilia, pantalla, descripcion, codigoBarras, compra, venta, marca,
-        ivaCompra, ivaVenta, precio) VALUES (:familia, :subfamilia, :pantalla, :descripcion, :codigoBarras, :compra,
-        :venta, :marca, :ivaCompra, :ivaVenta, :precio)";
-
-        $respuesta = Queries::crear($sql, [
-            'familia' => [$idFamilia, PDO::PARAM_INT],
-            'subfamilia' => [$idSubfamilia, PDO::PARAM_INT],
-            'pantalla' => [$idPantalla, PDO::PARAM_INT],
-            'descripcion' => [$params['descripcion'], PDO::PARAM_STR],
-            'codigoBarras' => [$params['codigoBarras'], PDO::PARAM_STR],
-            'compra' => [$params['compra'], PDO::PARAM_INT],
-            'venta' => [$params['venta'], PDO::PARAM_INT],
-            'marca' => [$idMarca, PDO::PARAM_INT],
-            'ivaCompra' => [$idIvaCompra, PDO::PARAM_INT],
-            'ivaVenta' => [$idIvaVenta, PDO::PARAM_INT],
-            'precio' => [$params['precio'], PDO::PARAM_STR]
-        ]);
-
-        // si la respuesta es correcta
-        if ($respuesta['status'] == 'ok') {
-            $maxCodigo = Utils::obtenerUltimoAutoIncrement();
-            // guardamos la imagen en el servidor
-            $base64Image = $params['imagen'];
-            $newName = $maxCodigo;
-            $ruta = $_SERVER['DOCUMENT_ROOT'] . API_BASE_PATH . '/imagenes/articulo/p/';
-
-            // guardamos la imagen
-            $procesado = Utils::procesarImagen($base64Image, $newName, $ruta);
-
-            return Utils::responseJsonOk($response, 'Articulo insertado. ' . $procesado['msg'], 200);
-        } else {
-            return Utils::responseJsonError($response, $respuesta['error']);
-        }
-    }
-
-    /**
      * insertarArticuloPlantilla
      *
      * @param  mixed $request
@@ -146,7 +56,7 @@ class ArticulosController extends Controller
      * @param  mixed $args
      * @return Response
      */
-    public function insertarArticuloPlantilla(Request $request, Response $response, array $args): Response
+    public function insertar(Request $request, Response $response, array $args): Response
     {
         $params = $request->getParsedBody();
 
@@ -205,9 +115,15 @@ class ArticulosController extends Controller
 
         // si la respuesta es correcta
         if ($respuesta['status'] == 'ok') {
-
+            // obtengo id generado del articulo
+            $id = Utils::obtenerUltimoAutoIncrement();
             // guardamos la imagen en el servidor
-            Utils::processAndSaveImages($params, API_BASE_PATH, IMAGE_SIZE_SMALL, IMAGE_SIZE_BIG);
+            if (!empty($params['imagenP']) && !empty($params['mimeTypeP'])) {
+                Utils::processAndSaveImages($params['imagenP'], $params['mimeTypeP'], $_SERVER[''] . $_SERVER['DOCUMENT_ROOT'] . API_BASE_PATH . '/imagenes/articulo/p/', $id, IMAGE_SIZE_SMALL);
+            }
+            if (!empty($params['imagenG']) && !empty($params['mimeTypeG'])) {
+                Utils::processAndSaveImages($params['imagenG'], $params['mimeTypeG'], $_SERVER['DOCUMENT_ROOT'] . API_BASE_PATH . '/imagenes/articulo/g/', $id, IMAGE_SIZE_BIG);
+            }
 
             return Utils::responseJsonOk($response, 'Articulo insertado. ' /*. $procesado['msg']*/, 200);
         } else {
@@ -223,13 +139,16 @@ class ArticulosController extends Controller
      * @param  mixed $args
      * @return Response
      */
-    public function actualizarArticuloPlantilla(Request $request, Response $response, array $args): Response
+    public function actualizar(Request $request, Response $response, array $args): Response
     {
+
+        // obtenemos el id
+        $id = $args['articulo'];
+       
         $params = $request->getParsedBody();
 
         // Parámetros requeridos
         $mensaje = Utils::requiredParams([
-            'idArticulo',
             'idFamilia',
             'idIvaCompra',
             'idIvaVenta',
@@ -246,6 +165,7 @@ class ArticulosController extends Controller
         }
 
         $valoresSQL = [
+            'articulo' => [$id, PDO::PARAM_INT],
             'familia' => [$params['idFamilia'], PDO::PARAM_INT],
             'descripcion' => [$params['descripcion'], PDO::PARAM_STR],
             'codigoBarras' => [$params['codigoBarras'], PDO::PARAM_STR],
@@ -254,7 +174,6 @@ class ArticulosController extends Controller
             'ivaCompra' => [$params['idIvaCompra'], PDO::PARAM_INT],
             'ivaVenta' => [$params['idIvaVenta'], PDO::PARAM_INT],
             'precio' => [$params['precio'], PDO::PARAM_STR],
-            'idArticulo' => [$params['idArticulo'], PDO::PARAM_INT],  // Identificador del artículo
         ];
 
         // Generamos la consulta de actualización
@@ -291,15 +210,32 @@ class ArticulosController extends Controller
         }
 
         // Añadimos la condición para identificar qué artículo actualizar
-        $sql .= " WHERE codigo = :idArticulo";
+        $sql .= " WHERE codigo = :articulo";
 
         $respuesta = Queries::actualizar($sql, $valoresSQL);
 
         // Si la respuesta es correcta
         if ($respuesta['status'] == 'ok') {
             // Verificamos si existen imágenes antes de intentar guardarlas
-            if (!empty($params['imagenP']) || !empty($params['imagenG'])) {
-                Utils::processAndSaveImages($params, API_BASE_PATH, IMAGE_SIZE_SMALL, IMAGE_SIZE_BIG, true, $params['idArticulo']);
+            if (!isset($params['imagenP']) || !isset($params['mimeTypeP'])) {
+                // borramos la imagen
+                // borramos la imagen
+                $filePathP = $_SERVER['DOCUMENT_ROOT'] . API_BASE_PATH . '/imagenes/articulo/p/' . $params['idArticulo'] . '.jpg';
+                if (file_exists($filePathP)) {
+                    unlink($filePathP);
+                }
+            } elseif (!empty($params['imagenP']) || !empty($params['mimeTypeP'])) {
+                Utils::processAndSaveImages($params['imagenP'], $params['mimeTypeP'], $_SERVER['DOCUMENT_ROOT'] . API_BASE_PATH . '/imagenes/articulo/p/', $params['idArticulo'], IMAGE_SIZE_SMALL);
+            }
+
+            if (!isset($params['imagenG']) || !isset($params['mimeTypeG'])) {
+                // borramos la imagen
+                $filePathG = $_SERVER['DOCUMENT_ROOT'] . API_BASE_PATH . '/imagenes/articulo/g/' . $params['idArticulo'] . '.jpg';
+                if (file_exists($filePathG)) {
+                    unlink($filePathG);
+                }
+            } elseif (!empty($params['imagenG']) || !empty($params['mimeTypeG'])) {
+                Utils::processAndSaveImages($params['imagenG'], $params['mimeTypeG'], $_SERVER['DOCUMENT_ROOT'] . API_BASE_PATH . '/imagenes/articulo/g/', $params['idArticulo'], IMAGE_SIZE_BIG);
             }
             return Utils::responseJsonOk($response, 'Artículo actualizado', 200);
         } else {
@@ -317,10 +253,10 @@ class ArticulosController extends Controller
      * @param  mixed $args
      * @return Response
      */
-    public function deleteArticulo(Request $request, Response $response, array $args)
+    public function borrar(Request $request, Response $response, array $args)
     {
         // obtenemos el codigo
-        $codigo = $args['codigo'];
+        $codigo = $args['articulo'];
         // generamos la consulta
         $sql = "DELETE FROM pl_articulo WHERE codigo = :codigo";
 
@@ -329,11 +265,13 @@ class ArticulosController extends Controller
         ]);
 
         if ($respuesta['status'] == 'ok') {
-            try {
-                if (Utils::borrarImagenServidor($codigo, API_BASE_PATH)) {
-                }
-            } catch (Exception $e) {
-                echo 'Error: ' . $e->getMessage();
+            $filePathP = $_SERVER['DOCUMENT_ROOT'] . API_BASE_PATH . '/imagenes/articulo/p/' . $codigo . '.jpg';
+            if (file_exists($filePathP)) {
+                unlink($filePathP);
+            }
+            $filePathG = $_SERVER['DOCUMENT_ROOT'] . API_BASE_PATH . '/imagenes/articulo/g/' . $codigo . '.jpg';
+            if (file_exists($filePathG)) {
+                unlink($filePathG);
             }
 
             return Utils::responseJsonOk($response, 'Articulo eliminado correctamente', 200);
@@ -350,10 +288,10 @@ class ArticulosController extends Controller
      * @param  mixed $args
      * @return Response
      */
-    public function obtenerImagenArticuloPlantilla(Request $request, Response $response, array $args): Response
+    public function leer(Request $request, Response $response, array $args): Response
     {
         $tipo = intval(Utils::existeVariable($args['tipo'], 0));
-        $dato = Utils::obtenerImagenArticulo($args['codigo'], $tipo);
+        $dato = Utils::obtenerImagenArticulo($args['articulo'], $tipo);
         return Utils::responseJsonOk($response, $dato, 200);
     }
 

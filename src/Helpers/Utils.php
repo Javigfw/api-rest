@@ -612,95 +612,30 @@ class Utils
      * @return bool Retorna true si la imagen se guardó correctamente, false en caso contrario
      * @throws Exception Si ocurre un error durante el proceso
      */
-    public static function processAndSaveImages($params, $basePath, $smallImageSize, $largeImageSize, $updateMode = false, $existingImageName = '')
+    public static function processAndSaveImages($imgBase64, $mime, $rutaCarpeta, $id, $imageSize)
     {
-        // Preparar datos de imagen
-        $base64ImageP = $params['imagenP'];
-        $base64ImageG = $params['imagenG'];
-        $mimeP = $params['mimeP'];
-        $mimeG = $params['mimeG'];
-        $rutaCarpetaP = $_SERVER['DOCUMENT_ROOT'] . $basePath . '/imagenes/articulo/p/';
-        $rutaCarpetaG = $_SERVER['DOCUMENT_ROOT'] . $basePath . '/imagenes/articulo/g/';
-        $rutaImagenP = 'data:' . $mimeP . ';base64,' . $base64ImageP;
-        $rutaImagenG = 'data:' . $mimeG . ';base64,' . $base64ImageG;
+        // Preparar datos de imagen        
+        $rutaImagen = 'data:' . $mime . ';base64,' . $imgBase64;        
 
         // Crear el directorio de destino si no existe
-        if (!is_dir($rutaCarpetaP)) {
-            mkdir($rutaCarpetaP, 0755, true);
-        }
-        if (!is_dir($rutaCarpetaG)) {
-            mkdir($rutaCarpetaG, 0755, true);
+        if (!is_dir($rutaCarpeta)) {
+            mkdir($rutaCarpeta, 0755, true);
         }
 
         // Determinar el nombre del archivo
-        $fileName = $updateMode ? $existingImageName : self::obtenerUltimoAutoIncrement();
-        $fileName .= '.jpg';
+        $fileName = $id.'.jpg';
 
-        // Procesar imagen pequeña
+        // Procesar imagen
         try {
-            $jpegBase64P = self::convertToJpeg($rutaImagenP);
-            $imagenPequena = self::resizeImageBinary($jpegBase64P, $smallImageSize);
-            self::saveBinaryImageToFile($imagenPequena, $rutaCarpetaP, $fileName);
+            $jpegBase64P = self::convertToJpeg($rutaImagen);
+            $imagen = self::resizeImageBinary($jpegBase64P, $imageSize);
+            self::saveBinaryImageToFile($imagen, $rutaCarpeta, $fileName);
         } catch (Exception $e) {
-            throw new Exception('Error al procesar la imagen pequeña: ' . $e->getMessage());
+            //throw new Exception('Error al procesar la imagen: ' . $e->getMessage());
+            return false;
         }
-
-        // Procesar imagen grande
-        try {
-            $jpegBase64G = self::convertToJpeg($rutaImagenG);
-            $imagenGrande = self::resizeImageBinary($jpegBase64G, $largeImageSize);
-            self::saveBinaryImageToFile($imagenGrande, $rutaCarpetaG, $fileName);
-        } catch (Exception $e) {
-            throw new Exception('Error al procesar la imagen grande: ' . $e->getMessage());
-        }
-
         return true;
     }
-
-
-    /**
-     * Elimina un archivo en dos directorios específicos del servidor.
-     *
-     * @param string $fileName El nombre del archivo que se debe eliminar.
-     * @param string $basePath La ruta base en el servidor.
-     * @return bool Retorna true si el archivo se eliminó correctamente de ambos directorios, false en caso contrario.
-     */
-    public static function borrarImagenServidor($fileName, $basePath)
-    {
-        // Construir las rutas completas a los directorios
-        $rutaCarpetaP = $_SERVER['DOCUMENT_ROOT'] . $basePath . '/imagenes/articulo/p/';
-        $rutaCarpetaG = $_SERVER['DOCUMENT_ROOT'] . $basePath . '/imagenes/articulo/g/';
-
-        // Inicializar un indicador para el éxito de la eliminación
-        $deletedFromBoth = true;
-
-        // Eliminar el archivo en el primer directorio
-        $filePathP = $rutaCarpetaP . $fileName . '.jpg';
-
-        if (file_exists($filePathP)) {
-            if (!unlink($filePathP)) {
-                $deletedFromBoth = false; // Marcar como fallido si no se pudo eliminar
-            }
-        }
-
-        // Eliminar el archivo en el segundo directorio
-        $filePathG = $rutaCarpetaG . $fileName . '.jpg';
-        if (file_exists($filePathG)) {
-            if (!unlink($filePathG)) {
-                $deletedFromBoth = false; // Marcar como fallido si no se pudo eliminar
-            }
-        }
-
-        // Verificar si el archivo fue eliminado en ambos directorios
-        if ($deletedFromBoth) {
-            return true;
-        } else {
-            throw new Exception('No se pudo eliminar el archivo en uno o ambos directorios.');
-        }
-    }
-
-
-
 
     // fin clase
 }

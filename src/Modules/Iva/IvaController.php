@@ -20,7 +20,7 @@ class IvaController extends Controller
      * @param  mixed $args
      * @return Response
      */
-    public function listarIvas(Request $request, Response $response, array $args): Response
+    public function listar(Request $request, Response $response, array $args): Response
     {
         // generamos la consulta
         $sql = "SELECT codigo, nombre, iva FROM pl_iva";
@@ -44,7 +44,7 @@ class IvaController extends Controller
      * @param  mixed $args
      * @return Response
      */
-    public function insertarIva(Request $request, Response $response, array $args): Response
+    public function insertar(Request $request, Response $response, array $args): Response
     {
         $params = $request->getParsedBody();
         // parametros requeridos
@@ -80,12 +80,15 @@ class IvaController extends Controller
      * @param  mixed $args
      * @return Response
      */
-    public function updateIva(Request $request, Response $response, array $args): Response
+    public function actualizar(Request $request, Response $response, array $args): Response
     {
+        // obtenemos el id
+        $id = $args['iva'];
+
         $params = $request->getParsedBody();
 
         // parametros requeridos
-        $mensaje = Utils::requiredParams(['nombre', 'valor', 'codigo'], $params);
+        $mensaje = Utils::requiredParams(['nombre', 'valor'], $params);
 
         // si no tenemos parametros mostramos el mensaje
         if ($mensaje != '') {
@@ -98,7 +101,7 @@ class IvaController extends Controller
         $respuesta = Queries::actualizar($sql, [
             'nombre' => [$params['nombre'], PDO::PARAM_STR],
             'iva' => [$params['valor'], PDO::PARAM_STR],
-            'codigo' => [$params['codigo'], PDO::PARAM_INT]
+            'codigo' => [$id, PDO::PARAM_INT]
         ]);
 
         if ($respuesta['status'] == 'ok') {
@@ -117,16 +120,16 @@ class IvaController extends Controller
      * @param  mixed $args
      * @return Response
      */
-    public function borrarIva(Request $request, Response $response, array $args): Response
+    public function borrar(Request $request, Response $response, array $args): Response
     {
         // obtenemos el codigo
-        $codigo = $args['codigo'];
+        $id = $args['iva'];
 
         // generamos la consulta
         $sql = "DELETE FROM pl_iva WHERE codigo = :codigo";
 
         $respuesta = Queries::borrar($sql, [
-            'codigo' => [$codigo, PDO::PARAM_INT]
+            'codigo' => [$id, PDO::PARAM_INT]
         ]);
 
         if ($respuesta['status'] == 'ok') {
