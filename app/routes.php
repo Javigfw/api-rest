@@ -109,19 +109,17 @@ return function (App $app) {
         $locales->put('/desactivar/{local:[0-9]+}', \App\Local\LocalController::class . ':desactivar');
         $locales->delete('/{local:[0-9]+}/{usuario:[0-9]+}', \App\Local\LocalController::class . ':desactivarAcceso');
         $locales->post('/activar', \App\Local\LocalController::class . ':activarAcceso');
-
     })->add(new LocalesMiddleware($app->getResponseFactory()));
 
     //*************************************************************************
     //* GRUPO USUARIOS
     //*************************************************************************
     $app->group('/usuarios', function (RouteCollectorProxy $usuario) use ($app) {
-        $usuario->get('', \App\Local\LocalController::class . ':listar'); // lista todos los usuarios
-        $usuario->get('{usuario}/locales', \App\Local\LocalController::class . ':listar'); // lista todos los locales del usuario
-        
-
-
-
+        $usuario->get('', \App\Usuarios\UsuariosController::class . ':listar'); // lista todos los usuarios
+        $usuario->get('/{usuario}/locales', \App\Usuarios\UsuariosController::class . ':listarLocalesUsuario'); // lista todos los locales del usuario
+        $usuario->post('', \App\Usuarios\UsuariosController::class . ':insertar'); // insertar usuario
+        $usuario->put('/{usuario:[0-9]+}', \App\Usuarios\UsuariosController::class . ':actualizar');
+        $usuario->delete('/{usuario:[0-9]+}', \App\Usuarios\UsuariosController::class . ':borrar');
     })->add(new UsuariosMiddleware($app->getResponseFactory()));
     //*************************************************************************
     //* GRUPO LOCALES
