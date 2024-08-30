@@ -27,7 +27,7 @@ class LoginController extends Controller
         $params = $request->getParsedBody();
 
         // parametros
-        $mensaje = Utils::requiredParams(['usuario', 'pass'], $params);
+        $mensaje = Utils::requiredParams(['email', 'pass'], $params);
 
         // si no tenemos parametros mostramos el mensaje
         if ($mensaje != '') {
@@ -38,11 +38,11 @@ class LoginController extends Controller
         $password = base64_encode($params['pass']);
 
         // generamos la consulta
-        $sql = "SELECT count(usuario) as 'existe', es_admin, usuario FROM usuario WHERE usuario = :usuario and contraseña = :pass ";
+        $sql = "SELECT count(email) as 'existe', es_admin, email, codigo FROM usuario WHERE email = :usuario and contrasena = :pass ";
 
         // obtenemos la respuesta
         $respuesta = Queries::leer($sql, [
-            'usuario' => [$params['usuario'], PDO::PARAM_STR],
+            'usuario' => [$params['email'], PDO::PARAM_STR],
             'pass' => [$password, PDO::PARAM_STR]
         ]);
 
@@ -52,8 +52,9 @@ class LoginController extends Controller
             if ($respuesta['data']['existe'] == 1) {
                 // codificamos la respuesta
                 $datos = [
-                    'usuario' => $respuesta['data']['usuario'],
-                    'es_admin' => $respuesta['data']['es_admin']
+                    'usuario' => $respuesta['data']['email'],
+                    'es_admin' => $respuesta['data']['es_admin'],
+                    'codigo' => $respuesta['data']['codigo']
                 ];
                 return Utils::responseJsonOk($response, $datos);
             } else {

@@ -23,7 +23,7 @@ class SubfamiliasController extends Controller
     public function listar(Request $request, Response $response, array $args): Response
     {
         // generamos la consulta
-        $sql = "SELECT codigo, nombre, familia FROM pl_subfamilia";
+        $sql = "SELECT codigo, nombre, familia FROM subfamilia";
         // generamos la respuesta
         $paramsBd = [];
         if (isset($args['familia'])) {
@@ -66,7 +66,7 @@ class SubfamiliasController extends Controller
         }
 
         // generamos la consulta
-        $sql = "INSERT INTO pl_subfamilia (familia, nombre) VALUES (:familia, :nombre)";
+        $sql = "INSERT INTO subfamilia (familia, nombre) VALUES (:familia, :nombre)";
 
         $respuesta = Queries::crear($sql, [
             'familia' => [$id, PDO::PARAM_INT],
@@ -106,7 +106,7 @@ class SubfamiliasController extends Controller
         }
 
         // generamos la consulta
-        $sql = "UPDATE pl_subfamilia SET nombre = :nombre WHERE codigo = :codigo";
+        $sql = "UPDATE subfamilia SET nombre = :nombre WHERE codigo = :codigo";
 
         $respuesta = Queries::actualizar($sql, [
             'nombre' => [$params['nombre'], PDO::PARAM_STR],
@@ -135,7 +135,7 @@ class SubfamiliasController extends Controller
         // obtenemos el codigo
         $codigo = $args['subfamilia'];
         // generamos la consulta
-        $sql = "DELETE FROM pl_subfamilia WHERE codigo = :codigo";
+        $sql = "DELETE FROM subfamilia WHERE codigo = :codigo";
 
         $respuesta = Queries::borrar($sql, [
             'codigo' => [$codigo, PDO::PARAM_INT]

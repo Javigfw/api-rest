@@ -24,7 +24,7 @@ class FamiliasController extends Controller
     public function listar(Request $request, Response $response, array $args): Response
     {
         // generamos la consulta
-        $sql = "SELECT codigo, nombre FROM pl_familia";
+        $sql = "SELECT codigo, nombre FROM familia";
         // generamos la respuesta
         $respuesta = Queries::listar($sql, []);
 
@@ -58,7 +58,7 @@ class FamiliasController extends Controller
         }
 
         // generamos la consulta
-        $sql = "INSERT INTO pl_familia (nombre) VALUES (:nombre)";
+        $sql = "INSERT INTO familia (nombre) VALUES (:nombre)";
 
         $respuesta = Queries::crear($sql, [
             'nombre' => [$params['nombre'], PDO::PARAM_STR],
@@ -97,7 +97,7 @@ class FamiliasController extends Controller
         }
 
         // generamos la consulta
-        $sql = "UPDATE pl_familia SET nombre = :nombre WHERE codigo = :codigo";
+        $sql = "UPDATE familia SET nombre = :nombre WHERE codigo = :codigo";
 
         $respuesta = Queries::actualizar($sql, [
             'nombre' => [$params['nombre'], PDO::PARAM_STR],
@@ -126,7 +126,7 @@ class FamiliasController extends Controller
         // obtenemos el codigo
         $codigo = $args['familia'];
         // generamos la consulta
-        $sql = "DELETE FROM pl_familia WHERE codigo = :codigo";
+        $sql = "DELETE FROM familia WHERE codigo = :codigo";
 
         $respuesta = Queries::borrar($sql, [
             'codigo' => [$codigo, PDO::PARAM_INT]

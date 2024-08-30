@@ -9,6 +9,7 @@
     "psr-4": {
       "App\\": "src/",
       "App\\Login\\": "src/Modules/Login/",
+      "App\\Usuarios\\": "src/Modules/Usuarios/",
       "App\\Articulos\\": "src/Modules/Articulos/",
       "App\\CargaInicial\\": "src/Modules/CargaInicial/",
       "App\\Familias\\": "src/Modules/Familias/",

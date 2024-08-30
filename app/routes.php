@@ -11,6 +11,14 @@ use Slim\App;
 
 // incluir los use de los middleware al final, sino puede dar fallo
 use App\Middleware\GrupoMiddleware;
+use App\Middleware\ArticulosMiddleware;
+use App\Middleware\FamiliasMiddleware;
+use App\Middleware\SubfamiliasMiddleware;
+use App\Middleware\IvasMiddleware;
+use App\Middleware\MarcasMiddleware;
+use App\Middleware\PantallasMiddleware;
+use App\Middleware\UsuariosMiddleware;
+use App\Middleware\LocalesMiddleware;
 
 return function (App $app) {
 
@@ -34,7 +42,7 @@ return function (App $app) {
 
 
     //*************************************************************************
-    //* PLANTILLA
+    //* GRUPO PLANTILLA
     //*************************************************************************
     $app->group('/plantilla', function (RouteCollectorProxy $plantilla) use ($app) {
 
@@ -42,10 +50,10 @@ return function (App $app) {
         $plantilla->group('/articulos', function (RouteCollectorProxy $articulos) use ($app) {
             $articulos->get('', \App\Articulos\ArticulosController::class . ':listar');
             $articulos->post('', \App\Articulos\ArticulosController::class . ':insertar');
-            $articulos->put('/{articulo}', \App\Articulos\ArticulosController::class . ':actualizar');
-            $articulos->delete('/{articulo}', \App\Articulos\ArticulosController::class . ':borrar');
+            $articulos->put('/{articulo:[0-9]+}', \App\Articulos\ArticulosController::class . ':actualizar');
+            $articulos->delete('/{articulo:[0-9]+}', \App\Articulos\ArticulosController::class . ':borrar');
             $articulos->get('/{articulo:[0-9]+}[/{tipo:[0-9]+}]', \App\Articulos\ArticulosController::class . ':leer');
-        });
+        })->add(new ArticulosMiddleware($app->getResponseFactory()));
 
         // familia
         $plantilla->group('/familias', function (RouteCollectorProxy $familias) use ($app) {
@@ -58,44 +66,69 @@ return function (App $app) {
             $familias->group('/{familia:[0-9]+}/subfamilias', function (RouteCollectorProxy $subfamilias) use ($app) {
                 $subfamilias->get('', \App\Subfamilias\SubfamiliasController::class . ':listar');
                 $subfamilias->post('', \App\Subfamilias\SubfamiliasController::class . ':insertar');
-                $subfamilias->put('/{subfamilia}', \App\Subfamilias\SubfamiliasController::class . ':actualizar');
-                $subfamilias->delete('/{subfamilia}', \App\Subfamilias\SubfamiliasController::class . ':borrar');
-            });
-        });
+                $subfamilias->put('/{subfamilia:[0-9]+}', \App\Subfamilias\SubfamiliasController::class . ':actualizar');
+                $subfamilias->delete('/{subfamilia:[0-9]+}', \App\Subfamilias\SubfamiliasController::class . ':borrar');
+            })->add(new SubfamiliasMiddleware($app->getResponseFactory()));
+        })->add(new FamiliasMiddleware($app->getResponseFactory()));
 
         // pantalla
         $plantilla->group('/pantallas', function (RouteCollectorProxy $pantalla) use ($app) {
             $pantalla->get('', \App\Pantallas\PantallasController::class . ':listar');
             $pantalla->post('', \App\Pantallas\PantallasController::class . ':insertar');
-            $pantalla->put('/{pantalla}', \App\Pantallas\PantallasController::class . ':actualizar');
-            $pantalla->delete('/{pantalla}', \App\Pantallas\PantallasController::class . ':borrar');
-        });
+            $pantalla->put('/{pantalla:[0-9]+}', \App\Pantallas\PantallasController::class . ':actualizar');
+            $pantalla->delete('/{pantalla:[0-9]+}', \App\Pantallas\PantallasController::class . ':borrar');
+        })->add(new PantallasMiddleware($app->getResponseFactory()));
 
         // iva
         $plantilla->group('/ivas', function (RouteCollectorProxy $iva) use ($app) {
             $iva->get('', \App\Iva\IvaController::class . ':listar');
             $iva->post('', \App\Iva\IvaController::class . ':insertar');
-            $iva->put('/{iva}', \App\Iva\IvaController::class . ':actualizar');
-            $iva->delete('/{iva}', \App\Iva\IvaController::class . ':borrar');
-        });
+            $iva->put('/{iva:[0-9]+}', \App\Iva\IvaController::class . ':actualizar');
+            $iva->delete('/{iva:[0-9]+}', \App\Iva\IvaController::class . ':borrar');
+        })->add(new IvasMiddleware($app->getResponseFactory()));
 
         // marca
         $plantilla->group('/marcas', function (RouteCollectorProxy $marca) use ($app) {
             $marca->get('', \App\Marcas\MarcasController::class . ':listar');
             $marca->post('', \App\Marcas\MarcasController::class . ':insertar');
-            $marca->put('/{marca}', \App\Marcas\MarcasController::class . ':actualizar');
-            $marca->delete('/{marca}', \App\Marcas\MarcasController::class . ':borrar');
-        });
+            $marca->put('/{marca:[0-9]+}', \App\Marcas\MarcasController::class . ':actualizar');
+            $marca->delete('/{marca:[0-9]+}', \App\Marcas\MarcasController::class . ':borrar');
+        })->add(new MarcasMiddleware($app->getResponseFactory()));
     });
 
 
     //*************************************************************************
-    //* RUTA LOCALES
+    //* GRUPO ADMINISTRACION LOCALES
     //*************************************************************************
-    $app->group('/locales', function (RouteCollectorProxy $group) use ($app) {
-        $group->get('/listarLocalesAdmin', \App\Local\LocalController::class . ':listarLocalesAdmin');
-        $group->get('/listarLocalesUsuario/{usuario}', \App\Local\LocalController::class . ':listarLocalesUsuario');
-    });
+    $app->group('/locales', function (RouteCollectorProxy $locales) use ($app) {
+        //$locales->get('', \App\Local\LocalController::class . ':listar'); // lista todos los locales
+        $locales->get('/{local}/usuarios', \App\Local\LocalController::class . ':listarUsuariosLocal'); // lista los usuarios del local, con y sin acceso
+        $locales->get('/{usuario:[0-9]+}', \App\Local\LocalController::class . ':listar'); // lista los locales del usuario
+        $locales->post('', \App\Local\LocalController::class . ':insertar');
+        $locales->put('/{local:[0-9]+}', \App\Local\LocalController::class . ':actualizar');
+        $locales->put('/desactivar/{local:[0-9]+}', \App\Local\LocalController::class . ':desactivar');
+        $locales->delete('/{local:[0-9]+}/{usuario:[0-9]+}', \App\Local\LocalController::class . ':desactivarAcceso');
+        $locales->post('/activar', \App\Local\LocalController::class . ':activarAcceso');
+
+    })->add(new LocalesMiddleware($app->getResponseFactory()));
+
+    //*************************************************************************
+    //* GRUPO USUARIOS
+    //*************************************************************************
+    $app->group('/usuarios', function (RouteCollectorProxy $usuario) use ($app) {
+        $usuario->get('', \App\Local\LocalController::class . ':listar'); // lista todos los usuarios
+        $usuario->get('{usuario}/locales', \App\Local\LocalController::class . ':listar'); // lista todos los locales del usuario
+        
+
+
+
+    })->add(new UsuariosMiddleware($app->getResponseFactory()));
+    //*************************************************************************
+    //* GRUPO LOCALES
+    //*************************************************************************
+    // $app->group('/locales', function (RouteCollectorProxy $group) use ($app) {
+    //     //$group->get('/{usuario:[0-9]+}', \App\Local\LocalController::class . ':listar');
+    // });
 
     //*************************************************************************
     //* RUTAS GRUPO ADMINISTRADORES

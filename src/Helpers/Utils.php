@@ -137,134 +137,6 @@ class Utils
 
 
     /**
-     * Function para comprobar el ApiKey y la clave
-     * 
-     * @param String $apiKey    numero del api
-     * @param String $clave     clave del api
-     * 
-     * @return $datos[]         retorna 0 si no conincide y 1 si es valida
-     */
-    public static function comprobarApiClave($apiKey, $clave)
-    {
-        $sql = "SELECT COUNT(*) as cantidad FROM DISPOSITIVO WHERE api_key = :api_Key and clave = :clave";
-        $datos = Queries::leer($sql, [
-            'api_Key' => [$apiKey, PDO::PARAM_STR],
-            'clave' => [$clave, PDO::PARAM_STR]
-        ]);
-
-        return $datos['data']['cantidad'];
-    }
-
-
-    /**
-     * obtenerIdFamiliaPorNombre
-     *
-     * @param  mixed $nombreFamilia
-     * @return Response
-     */
-    public static function obtenerIdFamiliaPorNombre($nombreFamilia)
-    {
-        // generamos la consulta
-        $sql = "SELECT codigo FROM pl_familia WHERE nombre = :nombreFamilia ";
-        // ejecutamos la consulta
-        $datos = Queries::leer($sql, [
-            'nombreFamilia' => [$nombreFamilia, PDO::PARAM_STR]
-        ]);
-        // devolvemos el resultado
-        return $datos['data']['codigo'];
-    }
-
-
-    /**
-     * obtenerIdSubfamiliaPorNombre
-     *
-     * @param  mixed $nombreSubfamilia
-     * @return void
-     */
-    public static function obtenerIdSubfamiliaPorNombre($nombreSubfamilia)
-    {
-        // generamos la consulta
-        $sql = "SELECT codigo FROM pl_subfamilia WHERE nombre = :nombreSubfamilia ";
-        // ejecutamos la consulta
-        $datos = Queries::leer($sql, [
-            'nombreSubfamilia' => [$nombreSubfamilia, PDO::PARAM_STR]
-        ]);
-        // devolvemos el resultado
-        return $datos['data']['codigo'];
-    }
-
-
-
-    /**
-     * obtenerIdMarcaPorNombre
-     *
-     * @param  mixed $nombreMarca
-     * @return void
-     */
-    public static function obtenerIdMarcaPorNombre($nombreMarca)
-    {
-        // generamos la consulta
-        $sql = "SELECT codigo FROM pl_marca WHERE nombre = :nombreMarca ";
-        // ejecutamos la consulta
-        $datos = Queries::leer($sql, [
-            'nombreMarca' => [$nombreMarca, PDO::PARAM_STR]
-        ]);
-        // devolvemos el resultado
-        return $datos['data']['codigo'];
-    }
-
-
-    /**
-     * obtenerIdIvaPorNombre
-     *
-     * @param  mixed $nombreIva
-     * @return void
-     */
-    public static function obtenerIdIvaPorNombre($nombreIva)
-    {
-        // generamos la consulta
-        $sql = "SELECT codigo FROM pl_iva WHERE nombre = :nombreIva ";
-        // ejecutamos la consulta
-        $datos = Queries::leer($sql, [
-            'nombreIva' => [$nombreIva, PDO::PARAM_STR]
-        ]);
-        // devolvemos el resultado
-        return $datos['data']['codigo'];
-    }
-
-
-    /**
-     * obtenerIdPantallaPorNombre
-     *
-     * @param  mixed $nombrePantalla
-     * @return void
-     */
-    public static function obtenerIdPantallaPorNombre($nombrePantalla)
-    {
-        // generamos la consulta
-        $sql = "SELECT codigo FROM pl_pantalla WHERE nombre = :nombrePantalla ";
-        // ejecutamos la consulta
-        $datos = Queries::leer($sql, [
-            'nombrePantalla' => [$nombrePantalla, PDO::PARAM_STR]
-        ]);
-        // devolvemos el resultado
-        return $datos['data']['codigo'];
-    }
-
-    public static function obtenerIdUsuario($usuario)
-    {
-        // generamos la consulta
-        $sql = "SELECT codigo FROM usuario WHERE usuario = :usuario ";
-        // ejecutamos la consulta
-        $datos = Queries::leer($sql, [
-            'usuario' => [$usuario, PDO::PARAM_STR]
-        ]);
-        // devolvemos el resultado
-        return $datos['data']['codigo'];
-    }
-
-
-    /**
      * Function para convertir las horas a minutos
      * 
      * @param int $numero     horas a convertir
@@ -327,20 +199,7 @@ class Utils
         }
     }
 
-    /**
-     * obtenerUltimoAutoIncrement
-     *
-     * @return int
-     */
-    public static function obtenerUltimoAutoIncrement(): int
-    {
-        // generamos la consulta
-        $sql = "SELECT LAST_INSERT_ID() as codigo";
-        // ejecutamos la consulta
-        $datos = Queries::leer($sql, []);
-        // devolvemos el resultado
-        return $datos['data']['codigo'];
-    }
+
 
     /**
      * Decodifica una imagen base64, comprueba su extensión, la convierte a JPG si es necesario y la guarda con el nuevo nombre.
@@ -420,49 +279,6 @@ class Utils
             $respuesta['msg'] = "No se proporcionó una cadena base64 válida.";
         }
         return $respuesta;
-    }
-
-
-    /**
-     * obtenerImagenArticulo
-     *
-     * @param  mixed $id
-     * @param  mixed $tipo
-     * @return mixed
-     */
-    public static function obtenerImagenArticulo(int $id, int $tipo = 0): mixed
-    {
-        // Definir las rutas para las imágenes pequeña y grande
-        $rutaP = $_SERVER['DOCUMENT_ROOT'] . API_BASE_PATH . '/imagenes/articulo/p/' . $id . '.jpg';
-        $rutaG = $_SERVER['DOCUMENT_ROOT'] . API_BASE_PATH . '/imagenes/articulo/g/' . $id . '.jpg';
-
-        // Inicializar las variables de contenido
-        $contenidoP = '';
-        $contenidoG = '';
-
-        // Verificar si se debe incluir la imagen pequeña y si existe
-        if (($tipo == 0 || $tipo == 1) && file_exists($rutaP)) {
-            $contenidoP = base64_encode(file_get_contents($rutaP));
-        }
-
-        // Verificar si se debe incluir la imagen grande y si existe
-        if (($tipo == 0 || $tipo == 2) && file_exists($rutaG)) {
-            $contenidoG = base64_encode(file_get_contents($rutaG));
-        }
-
-        // Retornar la imagen o las imágenes según el tipo
-        if ($tipo == 0) {
-            return [
-                'p' => $contenidoP,
-                'g' => $contenidoG
-            ];
-        } elseif ($tipo == 1) {
-            return $contenidoP;
-        } elseif ($tipo == 2) {
-            return $contenidoG;
-        } else {
-            return '';
-        }
     }
 
 
@@ -615,7 +431,7 @@ class Utils
     public static function processAndSaveImages($imgBase64, $mime, $rutaCarpeta, $id, $imageSize)
     {
         // Preparar datos de imagen        
-        $rutaImagen = 'data:' . $mime . ';base64,' . $imgBase64;        
+        $rutaImagen = 'data:' . $mime . ';base64,' . $imgBase64;
 
         // Crear el directorio de destino si no existe
         if (!is_dir($rutaCarpeta)) {
@@ -623,7 +439,7 @@ class Utils
         }
 
         // Determinar el nombre del archivo
-        $fileName = $id.'.jpg';
+        $fileName = $id . '.jpg';
 
         // Procesar imagen
         try {
@@ -635,6 +451,17 @@ class Utils
             return false;
         }
         return true;
+    }
+
+
+    /**
+     * FORMATEA UN NUMERO PARA QUE SIEMPRE TENGA 4 DIGITOS
+     * formateaIdCuatroDigitos
+     */
+    public static function formateaIdCuatroDigitos($number)
+    {
+        // Asegúrate de que la función devuelve una cadena formateada correctamente
+        return str_pad($number, 4, '0', STR_PAD_LEFT);
     }
 
     // fin clase

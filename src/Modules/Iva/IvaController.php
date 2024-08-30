@@ -23,7 +23,7 @@ class IvaController extends Controller
     public function listar(Request $request, Response $response, array $args): Response
     {
         // generamos la consulta
-        $sql = "SELECT codigo, nombre, iva FROM pl_iva";
+        $sql = "SELECT codigo, nombre, iva FROM iva";
         // generamos la respuesta
         $respuesta = Queries::listar($sql, []);
 
@@ -56,7 +56,7 @@ class IvaController extends Controller
         }
 
         // generamos la consulta
-        $sql = "INSERT INTO pl_iva (nombre, iva) VALUES (:nombre, :iva)";
+        $sql = "INSERT INTO iva (nombre, iva) VALUES (:nombre, :iva)";
 
         $respuesta = Queries::crear($sql, [
             'nombre' => [$params['nombre'], PDO::PARAM_STR],
@@ -96,7 +96,7 @@ class IvaController extends Controller
         }
 
         // generamos la consulta
-        $sql = "UPDATE pl_iva SET nombre = :nombre, iva = :iva WHERE codigo = :codigo";
+        $sql = "UPDATE iva SET nombre = :nombre, iva = :iva WHERE codigo = :codigo";
 
         $respuesta = Queries::actualizar($sql, [
             'nombre' => [$params['nombre'], PDO::PARAM_STR],
@@ -126,7 +126,7 @@ class IvaController extends Controller
         $id = $args['iva'];
 
         // generamos la consulta
-        $sql = "DELETE FROM pl_iva WHERE codigo = :codigo";
+        $sql = "DELETE FROM iva WHERE codigo = :codigo";
 
         $respuesta = Queries::borrar($sql, [
             'codigo' => [$id, PDO::PARAM_INT]

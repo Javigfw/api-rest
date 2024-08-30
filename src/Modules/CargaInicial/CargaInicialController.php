@@ -5,6 +5,7 @@ namespace App\CargaInicial;
 use App\Helpers\Controller;
 use App\Helpers\Queries;
 use App\Helpers\Utils;
+use App\Helpers\Peticiones;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use PDO;
@@ -48,23 +49,23 @@ class CargaInicialController extends Controller
         }
 
         // obtenemos el id de la familia
-        $idFamilia = Utils::obtenerIdFamiliaPorNombre($params['nombreFamilia']);
+        $idFamilia = Peticiones::obtenerIdFamiliaPorNombre($params['nombreFamilia']);
 
         // obtenemos el id de la subfamilia
-        $idSubfamilia = Utils::obtenerIdSubfamiliaPorNombre($params['nombreSubfamilia']);
+        $idSubfamilia = Peticiones::obtenerIdSubfamiliaPorNombre($params['nombreSubfamilia']);
 
         // obtenemos el id de la marca
-        $idMarca = Utils::obtenerIdMarcaPorNombre($params['nombreMarca']);
+        $idMarca = Peticiones::obtenerIdMarcaPorNombre($params['nombreMarca']);
 
         // obtenemos el iva de compra y venta
-        $idIvaCompra = Utils::obtenerIdIvaPorNombre($params['nombreIvaCompra']);
-        $idIvaVenta = Utils::obtenerIdIvaPorNombre($params['nombreIvaVenta']);
+        $idIvaCompra = Peticiones::obtenerIdIvaPorNombre($params['nombreIvaCompra']);
+        $idIvaVenta = Peticiones::obtenerIdIvaPorNombre($params['nombreIvaVenta']);
 
         // obtenemos el nombre de pantalla
-        $idPantalla = Utils::obtenerIdPantallaPorNombre($params['nombrePantalla']);
+        $idPantalla = Peticiones::obtenerIdPantallaPorNombre($params['nombrePantalla']);
 
         // generamos la consulta
-        $sql = "INSERT INTO pl_articulo (familia, subfamilia, pantalla, descripcion, codigoBarras, compra, venta, marca,
+        $sql = "INSERT INTO articulo (familia, subfamilia, pantalla, descripcion, codigoBarras, compra, venta, marca,
         ivaCompra, ivaVenta, precio) VALUES (:familia, :subfamilia, :pantalla, :descripcion, :codigoBarras, :compra,
         :venta, :marca, :ivaCompra, :ivaVenta, :precio)";
 
@@ -84,7 +85,7 @@ class CargaInicialController extends Controller
 
         // si la respuesta es correcta
         if ($respuesta['status'] == 'ok') {
-            $maxCodigo = Utils::obtenerUltimoAutoIncrement();
+            $maxCodigo = Peticiones::obtenerUltimoAutoIncrement();
             // guardamos la imagen en el servidor
             $base64Image = $params['imagen'];
             $newName = $maxCodigo;
@@ -120,7 +121,7 @@ class CargaInicialController extends Controller
         }
 
         // generamos la consulta
-        $sql = "INSERT INTO pl_familia (nombre) VALUES (:nombre)";
+        $sql = "INSERT INTO familia (nombre) VALUES (:nombre)";
 
         $respuesta = Queries::crear($sql, [
             'nombre' => [$params['nombre'], PDO::PARAM_STR],
@@ -154,10 +155,10 @@ class CargaInicialController extends Controller
         }
 
         // obtenemos el codigo de la familia por el nombre
-        $codigoFamilia = Utils::obtenerIdFamiliaPorNombre($params['nombreFamilia']);
+        $codigoFamilia = Peticiones::obtenerIdFamiliaPorNombre($params['nombreFamilia']);
 
         // generamos la consulta
-        $sql = "INSERT INTO pl_subfamilia (familia, nombre) VALUES (:familia, :nombre)";
+        $sql = "INSERT INTO subfamilia (familia, nombre) VALUES (:familia, :nombre)";
 
         $respuesta = Queries::crear($sql, [
             'familia' => [$codigoFamilia, PDO::PARAM_INT],
@@ -192,7 +193,7 @@ class CargaInicialController extends Controller
         }
 
         // generamos la consulta
-        $sql = "INSERT INTO pl_pantalla (nombre) VALUES (:nombre)";
+        $sql = "INSERT INTO pantalla (nombre) VALUES (:nombre)";
 
         $respuesta = Queries::crear($sql, [
             'nombre' => [$params['nombre'], PDO::PARAM_STR]
@@ -226,7 +227,7 @@ class CargaInicialController extends Controller
         }
 
         // generamos la consulta
-        $sql = "INSERT INTO pl_marca (nombre) VALUES (:nombre)";
+        $sql = "INSERT INTO marca (nombre) VALUES (:nombre)";
 
         $respuesta = Queries::crear($sql, [
             'nombre' => [$params['nombre'], PDO::PARAM_STR]
@@ -261,7 +262,7 @@ class CargaInicialController extends Controller
         }
 
         // generamos la consulta
-        $sql = "INSERT INTO pl_iva (nombre, iva) VALUES (:nombre, :iva)";
+        $sql = "INSERT INTO iva (nombre, iva) VALUES (:nombre, :iva)";
 
         $respuesta = Queries::crear($sql, [
             'nombre' => [$params['nombre'], PDO::PARAM_STR],

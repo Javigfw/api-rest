@@ -3,6 +3,7 @@
 namespace App\Articulos;
 
 use App\Helpers\Controller;
+use App\Helpers\Peticiones;
 use App\Helpers\Queries;
 use App\Helpers\Utils;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -28,13 +29,13 @@ class ArticulosController extends Controller
         $sql = "SELECT a.codigo, f.nombre as familia, s.nombre as subfamilia, p.nombre as pantalla, m.nombre as marca,
          i.nombre as ivaCompra, iv.nombre as ivaVenta, a.descripcion,
         a.codigoBarras, a.compra, a.venta, a.precio
-        FROM pl_articulo a
-        JOIN pl_familia f ON f.codigo = a.familia
-        LEFT OUTER JOIN pl_subfamilia s ON s.codigo = a.subfamilia
-        LEFT OUTER JOIN pl_pantalla p ON p.codigo = a.pantalla
-        LEFT OUTER JOIN pl_marca m ON m.codigo = a.marca
-        JOIN pl_iva i ON i.codigo = a.ivaCompra
-        JOIN pl_iva iv ON iv.codigo = a.ivaVenta
+        FROM articulo a
+        JOIN familia f ON f.codigo = a.familia
+        LEFT OUTER JOIN subfamilia s ON s.codigo = a.subfamilia
+        LEFT OUTER JOIN pantalla p ON p.codigo = a.pantalla
+        LEFT OUTER JOIN marca m ON m.codigo = a.marca
+        JOIN iva i ON i.codigo = a.ivaCompra
+        JOIN iva iv ON iv.codigo = a.ivaVenta
         ORDER BY 1 ";
         // generamos la respuesta
         $respuesta = Queries::listar($sql, []);
@@ -88,7 +89,7 @@ class ArticulosController extends Controller
             'precio' => [$params['precio'], PDO::PARAM_STR]
         ];
         // generamos la consulta
-        $sql1 = "INSERT INTO pl_articulo (familia, descripcion, codigoBarras, compra, venta, ivaCompra, ivaVenta, precio";
+        $sql1 = "INSERT INTO articulo (familia, descripcion, codigoBarras, compra, venta, ivaCompra, ivaVenta, precio";
         $sql2 = "VALUES(:familia, :descripcion, :codigoBarras, :compra, :venta, :ivaCompra, :ivaVenta, :precio";
         if (isset($params['idSubfamilia'])) {
             $sql1 .= ', subfamilia';
@@ -116,7 +117,7 @@ class ArticulosController extends Controller
         // si la respuesta es correcta
         if ($respuesta['status'] == 'ok') {
             // obtengo id generado del articulo
-            $id = Utils::obtenerUltimoAutoIncrement();
+            $id = Peticiones::obtenerUltimoAutoIncrement();
             // guardamos la imagen en el servidor
             if (!empty($params['imagenP']) && !empty($params['mimeTypeP'])) {
                 Utils::processAndSaveImages($params['imagenP'], $params['mimeTypeP'], $_SERVER[''] . $_SERVER['DOCUMENT_ROOT'] . API_BASE_PATH . '/imagenes/articulo/p/', $id, IMAGE_SIZE_SMALL);
@@ -144,7 +145,7 @@ class ArticulosController extends Controller
 
         // obtenemos el id
         $id = $args['articulo'];
-       
+
         $params = $request->getParsedBody();
 
         // Parámetros requeridos
@@ -177,7 +178,7 @@ class ArticulosController extends Controller
         ];
 
         // Generamos la consulta de actualización
-        $sql = "UPDATE pl_articulo SET
+        $sql = "UPDATE articulo SET
         familia = :familia,
         descripcion = :descripcion,
         codigoBarras = :codigoBarras,
@@ -258,7 +259,7 @@ class ArticulosController extends Controller
         // obtenemos el codigo
         $codigo = $args['articulo'];
         // generamos la consulta
-        $sql = "DELETE FROM pl_articulo WHERE codigo = :codigo";
+        $sql = "DELETE FROM articulo WHERE codigo = :codigo";
 
         $respuesta = Queries::borrar($sql, [
             'codigo' => [$codigo, PDO::PARAM_INT]
@@ -290,8 +291,11 @@ class ArticulosController extends Controller
      */
     public function leer(Request $request, Response $response, array $args): Response
     {
+        // obtenido a traves del Middleware
+        $idArticulo = $request->getAttribute('paramArticuloId');
+        
         $tipo = intval(Utils::existeVariable($args['tipo'], 0));
-        $dato = Utils::obtenerImagenArticulo($args['articulo'], $tipo);
+        $dato = Peticiones::obtenerImagenArticulo($args['articulo'], $tipo);
         return Utils::responseJsonOk($response, $dato, 200);
     }
 

@@ -23,7 +23,7 @@ class PantallasController extends Controller
     public function listar(Request $request, Response $response, array $args): Response
     {
         // generamos la consulta
-        $sql = "SELECT codigo, nombre FROM pl_pantalla";
+        $sql = "SELECT codigo, nombre FROM pantalla";
         // generamos la respuesta
         $respuesta = Queries::listar($sql, []);
 
@@ -56,7 +56,7 @@ class PantallasController extends Controller
         }
 
         // generamos la consulta
-        $sql = "INSERT INTO pl_pantalla (nombre) VALUES (:nombre)";
+        $sql = "INSERT INTO pantalla (nombre) VALUES (:nombre)";
 
         $respuesta = Queries::crear($sql, [
             'nombre' => [$params['nombre'], PDO::PARAM_STR]
@@ -95,7 +95,7 @@ class PantallasController extends Controller
         }
 
         // generamos la consulta
-        $sql = "UPDATE pl_pantalla SET nombre = :nombre WHERE codigo = :codigo";
+        $sql = "UPDATE pantalla SET nombre = :nombre WHERE codigo = :codigo";
 
         $respuesta = Queries::actualizar($sql, [
             'nombre' => [$params['nombre'], PDO::PARAM_STR],
@@ -125,7 +125,7 @@ class PantallasController extends Controller
         $codigo = $args['pantalla'];
 
         // generamos la consulta
-        $sql = "DELETE FROM pl_pantalla WHERE codigo = :codigo";
+        $sql = "DELETE FROM pantalla WHERE codigo = :codigo";
 
         $respuesta = Queries::borrar($sql, [
             'codigo' => [$codigo, PDO::PARAM_INT]

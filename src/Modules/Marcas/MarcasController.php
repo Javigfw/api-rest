@@ -24,7 +24,7 @@ class MarcasController extends Controller
     public function listar(Request $request, Response $response, array $args): Response
     {
         // generamos la consulta
-        $sql = "SELECT codigo, nombre FROM pl_marca";
+        $sql = "SELECT codigo, nombre FROM marca";
         // generamos la respuesta
         $respuesta = Queries::listar($sql, []);
 
@@ -57,7 +57,7 @@ class MarcasController extends Controller
         }
 
         // generamos la consulta
-        $sql = "INSERT INTO pl_marca (nombre) VALUES (:nombre)";
+        $sql = "INSERT INTO marca (nombre) VALUES (:nombre)";
 
         $respuesta = Queries::crear($sql, [
             'nombre' => [$params['nombre'], PDO::PARAM_STR]
@@ -96,7 +96,7 @@ class MarcasController extends Controller
         }
 
         // generamos la consulta
-        $sql = "UPDATE pl_marca SET nombre = :nombre WHERE codigo = :codigo";
+        $sql = "UPDATE marca SET nombre = :nombre WHERE codigo = :codigo";
 
         $respuesta = Queries::actualizar($sql, [
             'nombre' => [$params['nombre'], PDO::PARAM_STR],
@@ -125,7 +125,7 @@ class MarcasController extends Controller
         $id = $args['marca'];
 
         // generamos la consulta
-        $sql = "DELETE FROM pl_marca WHERE codigo = :codigo";
+        $sql = "DELETE FROM marca WHERE codigo = :codigo";
 
         $respuesta = Queries::borrar($sql, [
             'codigo' => [$id, PDO::PARAM_INT]
