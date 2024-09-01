@@ -120,6 +120,8 @@ return function (App $app) {
         $usuario->post('', \App\Usuarios\UsuariosController::class . ':insertar'); // insertar usuario
         $usuario->put('/{usuario:[0-9]+}', \App\Usuarios\UsuariosController::class . ':actualizar');
         $usuario->delete('/{usuario:[0-9]+}', \App\Usuarios\UsuariosController::class . ':borrar');
+        $usuario->delete('/{usuario:[0-9]+}/{local:[0-9]+}', \App\Usuarios\UsuariosController::class . ':desactivarAcceso');
+        $usuario->post('/activar', \App\Usuarios\UsuariosController::class . ':activarAcceso');
     })->add(new UsuariosMiddleware($app->getResponseFactory()));
     //*************************************************************************
     //* GRUPO LOCALES

@@ -175,6 +175,73 @@ class UsuariosController extends Controller
             return Utils::responseJsonError($response, 'Error de conexión con el servidor');
         }
     }
+    
+    /**
+     * desactivarAcceso
+     *
+     * @param  mixed $request
+     * @param  mixed $response
+     * @param  mixed $args
+     * @return Response
+     */
+    public function desactivarAcceso(Request $request, Response $response, array $args): Response
+    {
+        // obtenemos el codigo
+        $local = $args['local'];
+        $usuario = $args['usuario'];
+
+        // generamos la consulta
+        $sql = "DELETE FROM acceso WHERE local = :local AND usuario = :usuario";
+
+        // hacmeos la consulta
+        $respuesta = Queries::actualizar($sql, [
+            'local' => [$local, PDO::PARAM_INT],
+            'usuario' => [$usuario, PDO::PARAM_INT]
+        ]);
+
+        if ($respuesta['status'] == 'ok') {
+
+            return Utils::responseJsonOk($response, 'Acesso desactivado', 200);
+        } else {
+            return Utils::responseJsonError($response, $respuesta['error']);
+        }
+    }
+
+        
+    /**
+     * activarAcceso
+     *
+     * @param  mixed $request
+     * @param  mixed $response
+     * @param  mixed $args
+     * @return Response
+     */
+    public function activarAcceso(Request $request, Response $response, array $args): Response
+    {
+        $params = $request->getParsedBody();
+        // parametros requeridos
+        $mensaje = Utils::requiredParams(['local', 'usuario'], $params);
+
+        // si no tenemos parametros mostramos el mensaje
+        if ($mensaje != '') {
+            return Utils::responseJsonError($response, $mensaje);
+        }
+
+        // generamos la consulta
+        $sql = "INSERT INTO acceso (local, usuario) VALUES (:local, :usuario)";
+
+        $respuesta = Queries::crear($sql, [
+            'local' => [$params['local'], PDO::PARAM_INT],
+            'usuario' => [$params['usuario'], PDO::PARAM_INT]
+        ]);
+
+        if ($respuesta['status'] == 'ok') {
+
+            return Utils::responseJsonOk($response, 'Acesso activado', 200);
+        } else {
+            return Utils::responseJsonError($response, 'Error de conexión con el servidor. Local insertar API');
+        }
+    }
 
 
     // fin clase
