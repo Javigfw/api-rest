@@ -35,15 +35,16 @@ class LoginController extends Controller
         }
 
         // codificamos la contraseña
-        $password = base64_encode($params['pass']);
+        //$password = base64_encode($params['pass']);
 
         // generamos la consulta
-        $sql = "SELECT count(email) as 'existe', es_admin, email, codigo FROM usuario WHERE email = :usuario and contrasena = :pass ";
+        $sql = "SELECT count(email) as 'existe', esAdmin, email, idUsuario FROM usuario WHERE email = :usuario and password = :pass ";
+
 
         // obtenemos la respuesta
         $respuesta = Queries::leer($sql, [
             'usuario' => [$params['email'], PDO::PARAM_STR],
-            'pass' => [$password, PDO::PARAM_STR]
+            'pass' => [$params['pass'], PDO::PARAM_STR]
         ]);
 
         // comprobamos el resultado
@@ -53,8 +54,8 @@ class LoginController extends Controller
                 // codificamos la respuesta
                 $datos = [
                     'usuario' => $respuesta['data']['email'],
-                    'es_admin' => $respuesta['data']['es_admin'],
-                    'codigo' => $respuesta['data']['codigo']
+                    'es_admin' => $respuesta['data']['esAdmin'],
+                    'codigo' => $respuesta['data']['idUsuario']
                 ];
                 return Utils::responseJsonOk($response, $datos);
             } else {

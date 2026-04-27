@@ -58,7 +58,12 @@ class Utils
      */
     public static function responseJsonError(Response $response, string $message, $data = '', int $code = 401): Response
     {
-        $respuesta = ['status' => 'error', 'error' => $message];
+        $respuesta = [
+            'status' => 'error',
+            'error' => $message,
+            'requiresLogin' => ($code === 401)
+        ];
+        
         if ($data != '') {
             $respuesta['data'] = $data;
         }
@@ -462,6 +467,39 @@ class Utils
     {
         // Asegúrate de que la función devuelve una cadena formateada correctamente
         return str_pad($number, 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Formatear fecha en español (ej: 10 de Enero, 2026)
+     * 
+     * @param string $fecha
+     * @return string
+     */
+    public static function formatearFechaEspanol(string $fecha): string
+    {
+        $meses = [
+            1 => 'Enero',
+            2 => 'Febrero',
+            3 => 'Marzo',
+            4 => 'Abril',
+            5 => 'Mayo',
+            6 => 'Junio',
+            7 => 'Julio',
+            8 => 'Agosto',
+            9 => 'Septiembre',
+            10 => 'Octubre',
+            11 => 'Noviembre',
+            12 => 'Diciembre'
+        ];
+
+        $timestamp = strtotime($fecha);
+        if (!$timestamp) return $fecha;
+
+        $dia = date('j', $timestamp);
+        $mes = $meses[(int) date('n', $timestamp)];
+        $anio = date('Y', $timestamp);
+
+        return "$dia de $mes, $anio";
     }
 
     // fin clase

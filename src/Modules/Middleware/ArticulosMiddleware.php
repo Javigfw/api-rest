@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Middleware;
+namespace App\Modules\Middleware;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
@@ -8,8 +8,9 @@ use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Slim\Routing\RouteContext;
 
+
+use App\Helpers\Middleware;
 use App\Helpers\Utils;
-use App\Helpers\Peticiones;
 
 class ArticulosMiddleware
 {
@@ -29,18 +30,18 @@ class ArticulosMiddleware
 
 
 
-        if(array_key_exists('articulo',$args)){            
-            $articulo = intval(Utils::existeVariable($args['articulo'],0));
+        if (array_key_exists('articulo', $args)) {
+            $articulo = intval(Utils::existeVariable($args['articulo'], 0));
 
-            $datosArticulo = Peticiones::getArticulo($articulo,['codigo', 'descripcion', 'precio']);
+            $datosArticulo = Middleware::getArticulo($articulo, ['codigo', 'descripcion', 'precio']);
             // $datosArticulo = Peticiones::comprobarExisteArticuloPlantilla($articulo);
             if ($datosArticulo['codigo'] == 0) {
                 $response = $this->responseFactory->createResponse();
-                return Utils::responseJsonError($response, 'Articulo no encontrado');                
+                return Utils::responseJsonError($response, 'Articulo no encontrado');
             }
-            
+
             $descripcion = $datosArticulo['descripcion'];
-            
+
             $request = $request->withAttribute('paramArticuloId', $articulo);
             $request = $request->withAttribute('paramArticuloDescripcion', $descripcion);
             $request = $request->withAttribute('paramArticuloPrecio', $datosArticulo['precio']);

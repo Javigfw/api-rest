@@ -4,15 +4,15 @@
 //* VARIABLES API
 //*************************************************************************
 define('API_DISPLAY_ERROR', '1');
-define('API_BASE_PATH', '/api_config'); // CAMBIAR POR LA RUTA DONDE ESTE EL API EN EL SERVIDOR. SOLO SEGUNDO PARAMETRO
+define('API_BASE_PATH', ''); // CAMBIAR POR LA RUTA DONDE ESTE EL API EN EL SERVIDOR. SOLO SEGUNDO PARAMETRO
 
 //*************************************************************************
 //* VARIABLES BASE DE DATOS
 //*************************************************************************
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'config_pruebas'); // CAMBIAR  
-define('DB_USER', 'user_nov23'); // CAMBIAR
-define('DB_PASS', 'yIyjzBuPLj21908J'); // CAMBIAR
+define('DB_NAME', 'name_database'); // CAMBIAR  
+define('DB_USER', 'name_user'); // CAMBIAR
+define('DB_PASS', 'password'); // CAMBIAR
 
 //*************************************************************************
 //* VARIABLES MIDDLEWARE

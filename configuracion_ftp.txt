@@ -2,11 +2,11 @@
     {
         "name": "Servidor de desarrollo",
         "protocol": "ftp",
-        "host": "testhorario.intersoftalmeria.es",
+        "host": "hostpropio.es",
         "port": 21,
-        "username": "desarrolloweb@testhorario.intersoftalmeria.es",
-        "password": "j97J0wLvkY9t3CNd",
-        "remotePath": "/restapi-dispositivo-v2",
+        "username": "javigfw@gmail.com",
+        "password": "contraseña",
+        "remotePath": "/",
         "context": "./",
         "secure": false,
         "watcher": {

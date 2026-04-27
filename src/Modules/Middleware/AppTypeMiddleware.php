@@ -1,6 +1,6 @@
 <?php
 
-namespace APP\Middleware;
+namespace App\Modules\Middleware;
 
 use App\Helpers\Utils;
 use App\Helpers\Data;

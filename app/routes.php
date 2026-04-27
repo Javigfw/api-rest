@@ -7,213 +7,210 @@
 use Slim\Routing\RouteCollectorProxy;
 use Slim\App;
 
-// use Slim\Routing\RouteGroup;
-
 // incluir los use de los middleware al final, sino puede dar fallo
-use App\Middleware\GrupoMiddleware;
-use App\Middleware\ArticulosMiddleware;
-use App\Middleware\FamiliasMiddleware;
-use App\Middleware\SubfamiliasMiddleware;
-use App\Middleware\IvasMiddleware;
-use App\Middleware\MarcasMiddleware;
-use App\Middleware\PantallasMiddleware;
-use App\Middleware\UsuariosMiddleware;
-use App\Middleware\LocalesMiddleware;
+use App\Modules\Middleware\ArticulosMiddleware;
+use App\Modules\Middleware\AuthMiddleware;
+use App\Modules\Middleware\TokenBlacklistMiddleware;
+use App\Modules\Middleware\AdminMiddleware;
+use App\Modules\Middleware\SuscripcionMiddleware;
+
 
 return function (App $app) {
 
-    //*************************************************************************
-    //* RUTA LOGIN
-    //*************************************************************************
-    $app->post('/login', \App\Login\LoginController::class . ':login');
-
 
     //*************************************************************************
-    //* CONFIGURACION INICIAL    TPV -> PHPMYADMIN
+    //* RUTAS DE AUTENTICACIÓN
     //*************************************************************************
-    $app->group('/cargaInicial', function (RouteCollectorProxy $group) use ($app) {
-        $group->post('/articulo', \App\CargaInicial\CargaInicialController::class . ':insertarArticulo');
-        $group->post('/familia', \App\CargaInicial\CargaInicialController::class . ':insertarFamilia');
-        $group->post('/subfamilia', \App\CargaInicial\CargaInicialController::class . ':insertarSubfamilia');
-        $group->post('/pantallas', \App\CargaInicial\CargaInicialController::class . ':insertarPantallas');
-        $group->post('/marca', \App\CargaInicial\CargaInicialController::class . ':insertarMarca');
-        $group->post('/iva', \App\CargaInicial\CargaInicialController::class . ':insertarIva');
+
+    // Grupo de Autenticación
+    $app->group('/auth', function (RouteCollectorProxy $group) {
+        $group->post('/login', \App\Modules\Controllers\AuthController::class . ':login');
+        $group->post('/register', \App\Modules\Controllers\AuthController::class . ':registrar');
+        $group->post('/forgot-password', \App\Modules\Controllers\AuthController::class . ':forgotPassword');
+        $group->post('/reset-password', \App\Modules\Controllers\AuthController::class . ':resetPassword');
+        $group->get('/verify-email', \App\Modules\Controllers\AuthController::class . ':verificarEmail'); // Check email availability
+        $group->post('/validate-register', \App\Modules\Controllers\AuthController::class . ':validar');  // Validate form fields
+
+        // Rutas protegidas de Auth
+        $group->post('/logout', \App\Modules\Controllers\AuthController::class . ':logout')
+            ->add(TokenBlacklistMiddleware::class)
+            ->add(AuthMiddleware::class);
+
+        $group->get('/me', \App\Modules\Controllers\AuthController::class . ':me')
+            ->add(TokenBlacklistMiddleware::class)
+            ->add(AuthMiddleware::class);
+
+        $group->get('/check-status', \App\Modules\Controllers\AuthController::class . ':checkAdminStatus')
+            ->add(TokenBlacklistMiddleware::class)
+            ->add(AuthMiddleware::class);
     });
 
-
-    //*************************************************************************
-    //* GRUPO PLANTILLA
-    //*************************************************************************
-    $app->group('/plantilla', function (RouteCollectorProxy $plantilla) use ($app) {
-
-        // articulo
-        $plantilla->group('/articulos', function (RouteCollectorProxy $articulos) use ($app) {
-            $articulos->get('', \App\Articulos\ArticulosController::class . ':listar');
-            $articulos->post('', \App\Articulos\ArticulosController::class . ':insertar');
-            $articulos->put('/{articulo:[0-9]+}', \App\Articulos\ArticulosController::class . ':actualizar');
-            $articulos->delete('/{articulo:[0-9]+}', \App\Articulos\ArticulosController::class . ':borrar');
-            $articulos->get('/{articulo:[0-9]+}[/{tipo:[0-9]+}]', \App\Articulos\ArticulosController::class . ':leer');
-        })->add(new ArticulosMiddleware($app->getResponseFactory()));
-
-        // familia
-        $plantilla->group('/familias', function (RouteCollectorProxy $familias) use ($app) {
-            $familias->get('', \App\Familias\FamiliasController::class . ':listar');
-            $familias->post('', \App\Familias\FamiliasController::class . ':insertar');
-            $familias->put('/{familia}', \App\Familias\FamiliasController::class . ':actualizar');
-            $familias->delete('/{familia}', \App\Familias\FamiliasController::class . ':borrar');
-            $familias->get('/subfamilias', \App\Subfamilias\SubfamiliasController::class . ':listar');
-            // subfamilia
-            $familias->group('/{familia:[0-9]+}/subfamilias', function (RouteCollectorProxy $subfamilias) use ($app) {
-                $subfamilias->get('', \App\Subfamilias\SubfamiliasController::class . ':listar');
-                $subfamilias->post('', \App\Subfamilias\SubfamiliasController::class . ':insertar');
-                $subfamilias->put('/{subfamilia:[0-9]+}', \App\Subfamilias\SubfamiliasController::class . ':actualizar');
-                $subfamilias->delete('/{subfamilia:[0-9]+}', \App\Subfamilias\SubfamiliasController::class . ':borrar');
-            })->add(new SubfamiliasMiddleware($app->getResponseFactory()));
-        })->add(new FamiliasMiddleware($app->getResponseFactory()));
-
-        // pantalla
-        $plantilla->group('/pantallas', function (RouteCollectorProxy $pantalla) use ($app) {
-            $pantalla->get('', \App\Pantallas\PantallasController::class . ':listar');
-            $pantalla->post('', \App\Pantallas\PantallasController::class . ':insertar');
-            $pantalla->put('/{pantalla:[0-9]+}', \App\Pantallas\PantallasController::class . ':actualizar');
-            $pantalla->delete('/{pantalla:[0-9]+}', \App\Pantallas\PantallasController::class . ':borrar');
-        })->add(new PantallasMiddleware($app->getResponseFactory()));
-
-        // iva
-        $plantilla->group('/ivas', function (RouteCollectorProxy $iva) use ($app) {
-            $iva->get('', \App\Iva\IvaController::class . ':listar');
-            $iva->post('', \App\Iva\IvaController::class . ':insertar');
-            $iva->put('/{iva:[0-9]+}', \App\Iva\IvaController::class . ':actualizar');
-            $iva->delete('/{iva:[0-9]+}', \App\Iva\IvaController::class . ':borrar');
-        })->add(new IvasMiddleware($app->getResponseFactory()));
-
-        // marca
-        $plantilla->group('/marcas', function (RouteCollectorProxy $marca) use ($app) {
-            $marca->get('', \App\Marcas\MarcasController::class . ':listar');
-            $marca->post('', \App\Marcas\MarcasController::class . ':insertar');
-            $marca->put('/{marca:[0-9]+}', \App\Marcas\MarcasController::class . ':actualizar');
-            $marca->delete('/{marca:[0-9]+}', \App\Marcas\MarcasController::class . ':borrar');
-        })->add(new MarcasMiddleware($app->getResponseFactory()));
+    // Rutas Trial / Desafío (Públicas o Protegidas según necesidad, usuario no especificó auth)
+    // El código original no tenía auth headers, así que las dejaremos públicas por ahora o 
+    // bajo un grupo opcional. Asumiremos públicas similar a reviews.
+    $app->group('/trial', function (RouteCollectorProxy $group) {
+        $group->post('/questions', \App\Modules\Controllers\TrialController::class . ':getQuestions');
+        $group->post('/check', \App\Modules\Controllers\TrialController::class . ':checkAnswer');
+        $group->post('/sync', \App\Modules\Controllers\TrialController::class . ':syncAnswers')
+            ->add(TokenBlacklistMiddleware::class)
+            ->add(AuthMiddleware::class);
     });
 
+    // --- RESEÑAS ---
+    $app->group('/resenas', function (RouteCollectorProxy $group) {
+        $group->get('/aleatorias', \App\Modules\Controllers\ResenaController::class . ':aleatorias');
+        $group->post('', \App\Modules\Controllers\ResenaController::class . ':crear')
+            ->add(TokenBlacklistMiddleware::class)
+            ->add(AuthMiddleware::class);
+    });
 
-    //*************************************************************************
-    //* GRUPO ADMINISTRACION LOCALES
-    //*************************************************************************
-    $app->group('/locales', function (RouteCollectorProxy $locales) use ($app) {
-        //$locales->get('', \App\Local\LocalController::class . ':listar'); // lista todos los locales
-        $locales->get('/{local}/usuarios', \App\Local\LocalController::class . ':listarUsuariosLocal'); // lista los usuarios del local, con y sin acceso
-        $locales->get('/{usuario:[0-9]+}', \App\Local\LocalController::class . ':listar'); // lista los locales del usuario
-        $locales->post('', \App\Local\LocalController::class . ':insertar');
-        $locales->put('/{local:[0-9]+}', \App\Local\LocalController::class . ':actualizar');
-        $locales->put('/desactivar/{local:[0-9]+}', \App\Local\LocalController::class . ':desactivar');
-        $locales->delete('/{local:[0-9]+}/{usuario:[0-9]+}', \App\Local\LocalController::class . ':desactivarAcceso');
-        $locales->post('/activar', \App\Local\LocalController::class . ':activarAcceso');
-    })->add(new LocalesMiddleware($app->getResponseFactory()));
+    // --- ASSESSMENT ---
+    $app->group('/assessment', function (RouteCollectorProxy $group) {
+        // Públicas
+        $group->get('/preguntas', \App\Modules\Controllers\AssessmentController::class . ':getPreguntas');
+        $group->post('/calcular', \App\Modules\Controllers\AssessmentController::class . ':calcular');
 
-    //*************************************************************************
-    //* GRUPO USUARIOS
-    //*************************************************************************
-    $app->group('/usuarios', function (RouteCollectorProxy $usuario) use ($app) {
-        $usuario->get('', \App\Usuarios\UsuariosController::class . ':listar'); // lista todos los usuarios
-        $usuario->get('/{usuario}/locales', \App\Usuarios\UsuariosController::class . ':listarLocalesUsuario'); // lista todos los locales del usuario
-        $usuario->post('', \App\Usuarios\UsuariosController::class . ':insertar'); // insertar usuario
-        $usuario->put('/{usuario:[0-9]+}', \App\Usuarios\UsuariosController::class . ':actualizar');
-        $usuario->delete('/{usuario:[0-9]+}', \App\Usuarios\UsuariosController::class . ':borrar');
-        $usuario->delete('/{usuario:[0-9]+}/{local:[0-9]+}', \App\Usuarios\UsuariosController::class . ':desactivarAcceso');
-        $usuario->post('/activar', \App\Usuarios\UsuariosController::class . ':activarAcceso');
-    })->add(new UsuariosMiddleware($app->getResponseFactory()));
-    //*************************************************************************
-    //* GRUPO LOCALES
-    //*************************************************************************
-    // $app->group('/locales', function (RouteCollectorProxy $group) use ($app) {
-    //     //$group->get('/{usuario:[0-9]+}', \App\Local\LocalController::class . ':listar');
-    // });
+        // Protegidas (requieren autenticación)
+        $group->post('/asignar-bloques', \App\Modules\Controllers\AssessmentController::class . ':asignarBloques')
+            ->add(TokenBlacklistMiddleware::class)
+            ->add(AuthMiddleware::class);
+    });
 
-    //*************************************************************************
-    //* RUTAS GRUPO ADMINISTRADORES
-    //*************************************************************************
+    // --- BLOQUES ---
+    $app->group('/bloques', function (RouteCollectorProxy $group) {
+        $group->get('', \App\Modules\Controllers\BloqueController::class . ':listar');
+        $group->get('/{id:[0-9]+}', \App\Modules\Controllers\BloqueController::class . ':ver');
 
-    /*$app->group('/usuarios', function (RouteCollectorProxy $group) use ($app) {
-        // NOTA consulta grupo con dos parametros opcionales (se pueden incluir o no)
-        $group->post('/listar[/{saltoRegistros:[0-9]+}[/{registros:[0-9]+}]]', \App\Usuarios\UsuariosController::class . ':listar');
-        $group->post('/leer[/{id:[0-9]+}]', \App\Usuarios\UsuariosController::class . ':leer');
-        $group->post('/listarProvincias', \App\Usuarios\UsuariosController::class . ':listarProvincias');
-        $group->post('/guardar', \App\Usuarios\UsuariosController::class . ':guardar');
-        $group->put('/desactivaUsuario', \App\Usuarios\UsuariosController::class . ':desactivaUsuario');
-        //$group->put('/desactivaUsuario', \App\Usuarios\UsuariosController::class . ':desactivaUsuario');
-        $group->delete('/borrar', \App\Usuarios\UsuariosController::class . ':borrar');
-    })->add(new GrupoMiddleware($app->getResponseFactory()));
-*/
+        // Rutas específicas
+        $group->get('/nivel/{nivelId:[0-9]+}', \App\Modules\Controllers\BloqueController::class . ':obtenerPorNivel');
+        $group->get('/progreso', \App\Modules\Controllers\BloqueController::class . ':obtenerConProgreso');
+        $group->get('/bloques-suscripcion', \App\Modules\Controllers\BloqueController::class . ':obtenerPorSuscripcion');
+        $group->get('/progreso-niveles-ejercicios', \App\Modules\Controllers\BloqueController::class . ':obtenerProgresoNivelesEjercicios');
+        $group->get('/filtrar-ejercicios', \App\Modules\Controllers\BloqueController::class . ':filtrarEjerciciosBloque');
+        // NOTE: Access check (subscription OR trial blocks) is done inside the controller
+        $group->get('/{id:[0-9]+}/niveles', \App\Modules\Controllers\BloqueController::class . ':getNiveles');
+        $group->post('/corregir', \App\Modules\Controllers\BloqueController::class . ':corregirTest');
+
+        // Rutas administrativas
+        $group->group('', function (RouteCollectorProxy $adminGroup) {
+            $adminGroup->post('', \App\Modules\Controllers\BloqueController::class . ':crear');
+            $adminGroup->put('/{id:[0-9]+}', \App\Modules\Controllers\BloqueController::class . ':editar');
+            $adminGroup->delete('/{id:[0-9]+}', \App\Modules\Controllers\BloqueController::class . ':eliminar');
+        })->add(AdminMiddleware::class);
+
+    })->add(TokenBlacklistMiddleware::class)
+        ->add(AuthMiddleware::class);
+
+    // Rutas de Foro (Protegidas)
+    $app->group('/foro', function (RouteCollectorProxy $group) {
+        $group->get('/mensajes', \App\Modules\Controllers\ForoController::class . ':getMensajes');
+        $group->post('/mensajes', \App\Modules\Controllers\ForoController::class . ':createMensaje')
+            ->add(SuscripcionMiddleware::class);
+        $group->get('/usuario/{id:[0-9]+}', \App\Modules\Controllers\ForoController::class . ':getMensajesUsuario');
+
+        // Rutas administrativas
+        $group->group('', function (RouteCollectorProxy $adminGroup) {
+            $adminGroup->delete('/mensajes/{id:[0-9]+}', \App\Modules\Controllers\ForoController::class . ':eliminarMensaje');
+        })->add(AdminMiddleware::class);
+
+    })->add(TokenBlacklistMiddleware::class)
+        ->add(AuthMiddleware::class);
+
+    // --- NIVELES (Tests) ---
+    $app->group('/niveles', function (RouteCollectorProxy $group) {
+        $group->get('', \App\Modules\Controllers\NivelController::class . ':listar');
+        $group->get('/{id:[0-9]+}', \App\Modules\Controllers\NivelController::class . ':ver');
+
+        $group->group('', function (RouteCollectorProxy $adminGroup) {
+            $adminGroup->post('', \App\Modules\Controllers\NivelController::class . ':crear');
+            $adminGroup->put('/{id:[0-9]+}', \App\Modules\Controllers\NivelController::class . ':editar');
+            $adminGroup->delete('/{id:[0-9]+}', \App\Modules\Controllers\NivelController::class . ':eliminar');
+        })->add(AdminMiddleware::class);
+    })->add(TokenBlacklistMiddleware::class)
+        ->add(AuthMiddleware::class);
+
+    // --- EJERCICIOS ---
+    $app->group('/ejercicios', function (RouteCollectorProxy $group) {
+        $group->get('', \App\Modules\Controllers\EjercicioController::class . ':listar');
+        $group->get('/{id:[0-9]+}', \App\Modules\Controllers\EjercicioController::class . ':ver');
+
+        $group->group('', function (RouteCollectorProxy $adminGroup) {
+            $adminGroup->get('/buscar', \App\Modules\Controllers\EjercicioController::class . ':buscar');
+            $adminGroup->post('', \App\Modules\Controllers\EjercicioController::class . ':crear');
+            $adminGroup->put('/{id:[0-9]+}', \App\Modules\Controllers\EjercicioController::class . ':editar');
+            $adminGroup->delete('/{id:[0-9]+}', \App\Modules\Controllers\EjercicioController::class . ':eliminar');
+            $adminGroup->post('/bulk', \App\Modules\Controllers\EjercicioController::class . ':importarBulk');
+        })->add(AdminMiddleware::class);
+    })->add(TokenBlacklistMiddleware::class)
+        ->add(AuthMiddleware::class);
+
+    // --- RESPUESTAS DE EJERCICIO ---
+    $app->group('/respuestas-ejercicio', function (RouteCollectorProxy $group) {
+        $group->get('', \App\Modules\Controllers\RespuestaEjercicioController::class . ':listar');
+        $group->get('/{id:[0-9]+}', \App\Modules\Controllers\RespuestaEjercicioController::class . ':ver');
+
+        $group->group('', function (RouteCollectorProxy $adminGroup) {
+            $adminGroup->post('', \App\Modules\Controllers\RespuestaEjercicioController::class . ':crear');
+            $adminGroup->put('/{id:[0-9]+}', \App\Modules\Controllers\RespuestaEjercicioController::class . ':editar');
+            $adminGroup->delete('/{id:[0-9]+}', \App\Modules\Controllers\RespuestaEjercicioController::class . ':eliminar');
+        })->add(AdminMiddleware::class);
+    })->add(TokenBlacklistMiddleware::class)
+        ->add(AuthMiddleware::class);
+
+    // Rutas de Usuarios (Protegidas)
+    $app->group('/usuarios', function (RouteCollectorProxy $group) {
+        $group->get('/perfil', \App\Modules\Controllers\UsuarioController::class . ':getPerfil');
+        $group->put('/perfil', \App\Modules\Controllers\UsuarioController::class . ':updateProfile');
+        $group->get('/profile/{username}', \App\Modules\Controllers\UsuarioController::class . ':getPublicProfile');
+        $group->get('/suscripcion', \App\Modules\Controllers\UsuarioController::class . ':getSuscripcion');
+        $group->post('/suscripcion', \App\Modules\Controllers\UsuarioController::class . ':suscribirse');
+        $group->post('/suscripcion/cancelar', \App\Modules\Controllers\UsuarioController::class . ':cancelarSuscripcion');
+        $group->post('/imagen', \App\Modules\Controllers\UsuarioController::class . ':updateImagen');
+        $group->get('/estadisticas', \App\Modules\Controllers\UsuarioController::class . ':getEstadisticas');
+        $group->put('/password', \App\Modules\Controllers\UsuarioController::class . ':updatePassword');
+
+        $group->group('', function (RouteCollectorProxy $adminGroup) {
+            $adminGroup->get('/buscar', \App\Modules\Controllers\UsuarioController::class . ':buscar');
+            $adminGroup->post('/update-role', \App\Modules\Controllers\UsuarioController::class . ':updateRole');
+            $adminGroup->put('/reset-password', \App\Modules\Controllers\UsuarioController::class . ':adminResetPassword');
+        })->add(AdminMiddleware::class);
+    })->add(TokenBlacklistMiddleware::class)
+        ->add(AuthMiddleware::class);
+
+    // Rutas de Planes de Suscripción - Todo administrativo excepto listar disponibles
+    $app->get('/planes-public', \App\Modules\Controllers\PlanSuscripcionController::class . ':getPlanesDisponibles');
+
+    $app->group('/planes', function (RouteCollectorProxy $group) {
+        $group->get('', \App\Modules\Controllers\PlanSuscripcionController::class . ':getPlanesDisponibles');
+
+        $group->group('', function (RouteCollectorProxy $adminGroup) {
+            $adminGroup->get('/{id:[0-9]+}', \App\Modules\Controllers\PlanSuscripcionController::class . ':get');
+            $adminGroup->post('', \App\Modules\Controllers\PlanSuscripcionController::class . ':create');
+            $adminGroup->put('/{id:[0-9]+}', \App\Modules\Controllers\PlanSuscripcionController::class . ':update');
+            $adminGroup->delete('/{id:[0-9]+}', \App\Modules\Controllers\PlanSuscripcionController::class . ':delete');
+        })->add(AdminMiddleware::class);
+    })->add(TokenBlacklistMiddleware::class)
+        ->add(AuthMiddleware::class);
+
+    // Rutas de Suscripciones (Solo admin)
+    $app->group('/suscripciones', function (RouteCollectorProxy $group) {
+        $group->get('', \App\Modules\Controllers\SuscripcionController::class . ':listar');
+        $group->get('/{id:[0-9]+}', \App\Modules\Controllers\SuscripcionController::class . ':ver');
+    })->add(AdminMiddleware::class)
+        ->add(TokenBlacklistMiddleware::class)
+        ->add(AuthMiddleware::class);
+
+    // Rutas de difusión
+    $app->group('/difusion', function (RouteCollectorProxy $group) {
+        $group->post('/send', \App\Modules\Controllers\DifusionController::class . ':sendBroadcast');
+    })->add(AdminMiddleware::class)
+        ->add(TokenBlacklistMiddleware::class)
+        ->add(AuthMiddleware::class);
 
 
-
-    //******************************************************************************************************************
-    //*                                        EJEMPLOS DE PRUEBA OMITIDOS
-    //******************************************************************************************************************
-
-    /*
-    //REGISTRO
-    $app->post('/register', \App\Authentication\RegisterController::class . ':registerWebhookDeliverect');
-    // $app->post('/prueba/{local}', \App\Orders\OrdersController::class . ':prueba')->add(new \App\Middleware\PruebaMiddleware($app->getResponseFactory()));
-    // $app->post('/prueba/{local}/{app_type}', \App\Orders\OrdersController::class . ':prueba')->add(new LocalMiddleware($app->getResponseFactory()))->add(new AppTypeMiddleware($app->getResponseFactory()));
-    // ->add(function (Request $request, RequestHandler $handler) {
-    //     // Add the session storage to your request as [READ-ONLY]        
-    //     $request = $request->withAttribute('isLocal', '$_SESSION');        
-    //     return $handler->handle($request);
-    // });
-
-
-    //PRODUCTOS
-    //$app->get('/{local}/products', \App\Products\ProductsController::class . ':products');
-
-    $app->group('/{local}', function (RouteCollectorProxy $group) use ($app) {
-        $group->post('/completarRegistro/{app_type}', \App\Authentication\RegisterController::class . ':completarRegistro')->add(new AppTypeMiddleware($app->getResponseFactory()));
-        $group->post('/token/{app_type}', \App\Authentication\AuthenticationController::class . ':token')->add(new AppTypeMiddleware($app->getResponseFactory()));
-        $group->get('/products', \App\Products\ProductsController::class . ':productsWebhookDeliverect');
-        $group->post('/orders', \App\Orders\OrdersController::class . ':ordersWebhookDeliverect');
-        $group->post('/downloadOrders', \App\Orders\OrdersController::class . ':downloadOrders');
-        $group->post('/markOrderAsDownloaded', \App\Orders\OrdersController::class . ':markOrderAsDownloaded');
-    })->add(new LocalMiddleware($app->getResponseFactory()));
-    
-    $app->group('/{app_type}', function (RouteCollectorProxy $group) use ($app) {
-        // $group->post('/register-local/{local}', \App\Authentication\RegisterController::class . ':completarRegistro')->add(new LocalMiddleware($app->getResponseFactory()));        
-        $group->post('/products/{local}', \App\Products\ProductsController::class . ':productsPost')->add(new LocalMiddleware($app->getResponseFactory()));
-        $group->get('/allergens/{local}', \App\Products\ProductsController::class . ':getAllergens')->add(new LocalMiddleware($app->getResponseFactory()));
-        $group->get('/brands/{local}', \App\Orders\OrdersController::class . ':getBrands')->add(new LocalMiddleware($app->getResponseFactory()));
-        $group->post('/order-status/{local}', \App\Orders\OrdersController::class . ':setStatus')->add(new LocalMiddleware($app->getResponseFactory()));
-        $group->post('/order-preparation-time/{local}', \App\Orders\OrdersController::class . ':updatePreparationTime')->add(new LocalMiddleware($app->getResponseFactory()));
-        $group->get('/all-channels/{local}', \App\Orders\OrdersController::class . ':getAllChannels')->add(new LocalMiddleware($app->getResponseFactory()));
-        $group->get('/channel-links/{local}', \App\Orders\OrdersController::class . ':getChannelLinks')->add(new LocalMiddleware($app->getResponseFactory()));
-        // $group->post('/saludo/{local}', \App\Authentication\AuthenticationController::class . ':saludo')->add(new LocalMiddleware($app->getResponseFactory()));        
-    })->add(new AppTypeMiddleware($app->getResponseFactory()));
-*/
-    /*
-    ->add(function (Request $request, RequestHandler $handler) use ($app) {
-        $response = $handler->handle($request);
-        $dateOrTime = (string) $response->getBody();
-    
-        $response = $app->getResponseFactory()->createResponse();
-        $response->getBody()->write('¡' . $dateOrTime . '!');
-    
+    // Ruta de prueba
+    $app->get('/health', function ($request, $response) {
+        $response->getBody()->write('OK');
         return $response;
     });
-    */
-    /*
-        $app->post('/login',        \App\Login\LoginController::class . ':login');
-        $app->get('/saludo',        \App\Pruebas\PruebasController::class . ':saludo');
-        $app->get('/auth',          \App\Pruebas\PruebasController::class . ':auth');
-
-
-        $app->group('/empleado', function (RouteCollectorProxy $group) {
-            $group->post('/crear',                          \App\Empleados\EmpleadosController::class . ':crear');
-            $group->get('/leer/{id}',                       \App\Empleados\EmpleadosController::class . ':leer');
-            $group->put('/actualizar/{id}',                 \App\Empleados\EmpleadosController::class . ':actualizar');
-            $group->get('/listar[/{cantidad}[/{empieza}]]', \App\Empleados\EmpleadosController::class . ':listar');
-            $group->delete('/borrar/{id}',                  \App\Empleados\EmpleadosController::class . ':borrar');
-        });
-
-        $app->map(['GET', 'POST', 'PUT', 'DELETE'], '/empleado2[/{p1}]', \App\Empleados\EmpleadosController::class . ':completa');
-
-    */
 };
